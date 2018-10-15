@@ -2,11 +2,10 @@ import qbs
 import qbs.File
 
 Product {
-    type: "staticlibrary"
-
     name: "Yaml"
     targetName: "yaml"
 
+    type: "staticlibrary"
     Depends { name: "cpp" }
 
     cpp.archiverName: {
