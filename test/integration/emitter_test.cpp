@@ -52,6 +52,63 @@ TEST_F(EmitterTest, SimpleQuotedScalar) {
   ExpectEmit("test");
 }
 
+TEST_F(EmitterTest, DumpAndSize) {
+  Node n(Load("test"));
+  EXPECT_EQ("test", Dump(n));
+  out << n;
+  EXPECT_EQ(4, out.size());
+}
+
+TEST_F(EmitterTest, NullScalar) {
+  Node n(Load("null"));
+  out << n;
+  ExpectEmit("~");
+}
+
+TEST_F(EmitterTest, AliasScalar) {
+  Node n(Load("[&a str, *a]"));
+  out << n;
+  ExpectEmit("[&1 str, *1]");
+}
+
+TEST_F(EmitterTest, StringFormat) {
+  out << BeginSeq;
+  out.SetStringFormat(SingleQuoted);
+  out << "string";
+  out.SetStringFormat(DoubleQuoted);
+  out << "string";
+  out.SetStringFormat(Literal);
+  out << "string";
+  out << EndSeq;
+
+  ExpectEmit("- 'string'\n- \"string\"\n- |\n  string");
+}
+
+TEST_F(EmitterTest, IntBase) {
+  out << BeginSeq;
+  out.SetIntBase(Dec);
+  out << 1024;
+  out.SetIntBase(Hex);
+  out << 1024;
+  out.SetIntBase(Oct);
+  out << 1024;
+  out << EndSeq;
+
+  ExpectEmit("- 1024\n- 0x400\n- 02000");
+}
+
+TEST_F(EmitterTest, NumberPrecision) {
+  out.SetFloatPrecision(3);
+  out.SetDoublePrecision(2);
+  out << BeginSeq;
+  out << 3.1425926f;
+  out << 53.5893;
+  out << 2384626.4338;
+  out << EndSeq;
+
+  ExpectEmit("- 3.14\n- 54\n- 2.4e+06");
+}
+
 TEST_F(EmitterTest, SimpleSeq) {
   out << BeginSeq;
   out << "eggs";
@@ -429,6 +486,12 @@ TEST_F(EmitterTest, ByKindTagWithScalar) {
   ExpectEmit("- \"12\"\n- 12\n- ! 12");
 }
 
+TEST_F(EmitterTest, LocalTagInNameHandle) {
+  out << LocalTag("a", "foo") << "bar";
+
+  ExpectEmit("!a!foo bar");
+}
+
 TEST_F(EmitterTest, LocalTagWithScalar) {
   out << LocalTag("foo") << "bar";
 
@@ -514,6 +577,17 @@ TEST_F(EmitterTest, STLContainers) {
   out << EndSeq;
 
   ExpectEmit("- [2, 3, 5, 7, 11, 13]\n- Daniel: 26\n  Jesse: 24");
+}
+
+TEST_F(EmitterTest, CommentStyle) {
+  out.SetPreCommentIndent(1);
+  out.SetPostCommentIndent(2);
+  out << BeginMap;
+  out << Key << "method";
+  out << Value << "least squares" << Comment("should we change this method?");
+  out << EndMap;
+
+  ExpectEmit("method: least squares #  should we change this method?");
 }
 
 TEST_F(EmitterTest, SimpleComment) {
@@ -612,6 +686,77 @@ TEST_F(EmitterTest, SimpleGlobalSettings) {
   ExpectEmit("-   ? key 1\n    : value 1\n    ? key 2\n    : [a, b, c]");
 }
 
+TEST_F(EmitterTest, GlobalLongKeyOnSeq) {
+  out.SetMapFormat(LongKey);
+
+  out << BeginMap;
+  out << Key << Anchor("key");
+  out << BeginSeq << "a"
+      << "b" << EndSeq;
+  out << Value << Anchor("value");
+  out << BeginSeq << "c"
+      << "d" << EndSeq;
+  out << Key << Alias("key") << Value << Alias("value");
+  out << EndMap;
+
+  ExpectEmit(R"(? &key
+  - a
+  - b
+: &value
+  - c
+  - d
+? *key
+: *value)");
+}
+
+TEST_F(EmitterTest, GlobalLongKeyOnMap) {
+  out.SetMapFormat(LongKey);
+
+  out << BeginMap;
+  out << Key << Anchor("key");
+  out << BeginMap << "a"
+      << "b" << EndMap;
+  out << Value << Anchor("value");
+  out << BeginMap << "c"
+      << "d" << EndMap;
+  out << Key << Alias("key") << Value << Alias("value");
+  out << EndMap;
+
+  ExpectEmit(R"(? &key
+  ? a
+  : b
+: &value
+  ? c
+  : d
+? *key
+: *value)");
+}
+
+TEST_F(EmitterTest, GlobalSettingStyleOnSeqNode) {
+  Node n(Load(R"(foo:
+  - 1
+  - 2
+  - 3
+bar: aa)"));
+  out.SetSeqFormat(YAML::Flow);
+  out << n;
+  ExpectEmit(R"(foo: [1, 2, 3]
+bar: aa)");
+}
+
+TEST_F(EmitterTest, GlobalSettingStyleOnMapNode) {
+  Node n(Load(R"(-
+  foo: a
+  bar: b
+- 2
+- 3)"));
+  out.SetMapFormat(YAML::Flow);
+  out << n;
+  ExpectEmit(R"(- {foo: a, bar: b}
+- 2
+- 3)");
+}
+
 TEST_F(EmitterTest, ComplexGlobalSettings) {
   out << BeginSeq;
   out << Block;
@@ -644,6 +789,17 @@ TEST_F(EmitterTest, Null) {
   ExpectEmit("- ~\n- null value: ~\n  ~: null key");
 }
 
+TEST_F(EmitterTest, OutputCharset) {
+  out << BeginSeq;
+  out.SetOutputCharset(EmitNonAscii);
+  out << "\x24 \xC2\xA2 \xE2\x82\xAC";
+  out.SetOutputCharset(EscapeNonAscii);
+  out << "\x24 \xC2\xA2 \xE2\x82\xAC";
+  out << EndSeq;
+
+  ExpectEmit("- $ ¢ €\n- \"$ \\xa2 \\u20ac\"");
+}
+
 TEST_F(EmitterTest, EscapedUnicode) {
   out << EscapeNonAscii << "\x24 \xC2\xA2 \xE2\x82\xAC \xF0\xA4\xAD\xA2";
 
@@ -658,6 +814,11 @@ TEST_F(EmitterTest, Unicode) {
 TEST_F(EmitterTest, DoubleQuotedUnicode) {
   out << DoubleQuoted << "\x24 \xC2\xA2 \xE2\x82\xAC \xF0\xA4\xAD\xA2";
   ExpectEmit("\"\x24 \xC2\xA2 \xE2\x82\xAC \xF0\xA4\xAD\xA2\"");
+}
+
+TEST_F(EmitterTest, DoubleQuotedString) {
+  out << DoubleQuoted << "\" \\ \n \t \r \b \x15 \xEF\xBB\xBF \x24";
+  ExpectEmit("\"\\\" \\\\ \\n \\t \\r \\b \\x15 \\ufeff $\"");
 }
 
 struct Foo {
@@ -826,6 +987,57 @@ TEST_F(EmitterTest, ColonAtEndOfScalarInFlow) {
   ExpectEmit("{\"C:\": \"C:\"}");
 }
 
+TEST_F(EmitterTest, GlobalBoolFormatting) {
+  out << BeginSeq;
+  out.SetBoolFormat(UpperCase);
+  out.SetBoolFormat(YesNoBool);
+  out << true;
+  out << false;
+  out.SetBoolFormat(TrueFalseBool);
+  out << true;
+  out << false;
+  out.SetBoolFormat(OnOffBool);
+  out << true;
+  out << false;
+  out.SetBoolFormat(LowerCase);
+  out.SetBoolFormat(YesNoBool);
+  out << true;
+  out << false;
+  out.SetBoolFormat(TrueFalseBool);
+  out << true;
+  out << false;
+  out.SetBoolFormat(OnOffBool);
+  out << true;
+  out << false;
+  out.SetBoolFormat(CamelCase);
+  out.SetBoolFormat(YesNoBool);
+  out << true;
+  out << false;
+  out.SetBoolFormat(TrueFalseBool);
+  out << true;
+  out << false;
+  out.SetBoolFormat(OnOffBool);
+  out << true;
+  out << false;
+  out.SetBoolFormat(ShortBool);
+  out.SetBoolFormat(UpperCase);
+  out.SetBoolFormat(YesNoBool);
+  out << true;
+  out << false;
+  out.SetBoolFormat(TrueFalseBool);
+  out << true;
+  out << false;
+  out.SetBoolFormat(OnOffBool);
+  out << true;
+  out << false;
+  out << EndSeq;
+  ExpectEmit(
+      "- YES\n- NO\n- TRUE\n- FALSE\n- ON\n- OFF\n"
+      "- yes\n- no\n- true\n- false\n- on\n- off\n"
+      "- Yes\n- No\n- True\n- False\n- On\n- Off\n"
+      "- Y\n- N\n- Y\n- N\n- Y\n- N");
+}
+
 TEST_F(EmitterTest, BoolFormatting) {
   out << BeginSeq;
   out << TrueFalseBool << UpperCase << true;
@@ -858,6 +1070,45 @@ TEST_F(EmitterTest, BoolFormatting) {
       "- YES\n- Yes\n- yes\n- NO\n- No\n- no\n"
       "- ON\n- On\n- on\n- OFF\n- Off\n- off\n"
       "- Y\n- Y\n- y\n- N\n- N\n- n");
+}
+
+TEST_F(EmitterTest, GlobalNullFormatting) {
+  out << Flow << BeginSeq;
+  out.SetNullFormat(LowerNull);
+  out << Null;
+  out.SetNullFormat(UpperNull);
+  out << Null;
+  out.SetNullFormat(CamelNull);
+  out << Null;
+  out.SetNullFormat(TildeNull);
+  out << Null;
+  out << EndSeq;
+  ExpectEmit("[null, NULL, Null, ~]");
+}
+
+TEST_F(EmitterTest, NullFormatting) {
+  out << Flow << BeginSeq;
+  out << LowerNull << Null;
+  out << UpperNull << Null;
+  out << CamelNull << Null;
+  out << TildeNull << Null;
+  out << EndSeq;
+  ExpectEmit("[null, NULL, Null, ~]");
+}
+
+TEST_F(EmitterTest, NullFormattingOnNode) {
+  Node n(Load("null"));
+  out << Flow << BeginSeq;
+  out.SetNullFormat(LowerNull);
+  out << n;
+  out.SetNullFormat(UpperNull);
+  out << n;
+  out.SetNullFormat(CamelNull);
+  out << n;
+  out.SetNullFormat(TildeNull);
+  out << n;
+  out << EndSeq;
+  ExpectEmit("[null, NULL, Null, ~]");
 }
 
 // TODO: Fix this test.
@@ -1023,6 +1274,224 @@ TEST_F(EmitterTest, NaN) {
   ExpectEmit(
 	  "foo: .nan\n"
 	  "bar: .nan");
+}
+
+TEST_F(EmitterTest, ComplexFlowSeqEmbeddingAMapWithNewLine) { 
+  out << YAML::BeginMap;
+
+  out << YAML::Key << "NodeA" << YAML::Value << YAML::BeginMap;
+  out << YAML::Key << "k" << YAML::Value << YAML::Flow << YAML::BeginSeq;
+  out << YAML::BeginMap << YAML::Key << "i" << YAML::Value << 0 << YAML::EndMap
+      << YAML::Newline;
+  out << YAML::BeginMap << YAML::Key << "i" << YAML::Value << 1 << YAML::EndMap
+      << YAML::Newline;
+  out << YAML::EndSeq;
+  out << YAML::EndMap;
+
+  out << YAML::Key << "NodeB" << YAML::Value << YAML::BeginMap;
+  out << YAML::Key << "k" << YAML::Value << YAML::Flow << YAML::BeginSeq;
+  out << YAML::BeginMap << YAML::Key << "i" << YAML::Value << 0 << YAML::EndMap
+      << YAML::Newline;
+  out << YAML::BeginMap << YAML::Key << "i" << YAML::Value << 1 << YAML::EndMap
+      << YAML::Newline;
+  out << YAML::EndSeq;
+  out << YAML::EndMap;
+
+  out << YAML::EndMap;
+
+  ExpectEmit(R"(NodeA:
+  k: [{i: 0},
+    {i: 1},
+    ]
+NodeB:
+  k: [{i: 0},
+    {i: 1},
+    ])");
+}
+
+TEST_F(EmitterTest, ComplexFlowSeqEmbeddingAMapWithNewLineUsingAliases) {
+  out << BeginMap;
+
+  out << Key << "Node" << Anchor("Node") << Value << BeginMap;
+  out << Key << "k" << Value << Flow << BeginSeq;
+  out << BeginMap << Key << "i" << Value << 0 << EndMap;
+  out << YAML::Newline;
+  out << BeginMap << Key << "i" << Value << 1 << EndMap;
+  out << YAML::Newline;
+  out << EndSeq << EndMap;
+
+  out << Key << "NodeA" << Alias("Node");
+  out << Key << "NodeB" << Alias("Node");
+
+  out << EndMap;
+
+  ExpectEmit(R"(Node: &Node
+  k: [{i: 0},
+    {i: 1},
+    ]
+NodeA: *Node
+NodeB: *Node)");
+}
+
+TEST_F(EmitterTest, ComplexFlowSeqEmbeddingAMapUsingAliases) {
+  out << BeginMap;
+
+  out << Key << "Node" << Anchor("Node") << Value << BeginMap;
+  out << Key << "k" << Value << Flow << BeginSeq;
+  out << BeginMap << Key << "i" << Value << 0 << EndMap;
+  out << BeginMap << Key << "i" << Value << 1 << EndMap;
+  out << EndSeq << EndMap;
+
+  out << Key << "NodeA" << Alias("Node");
+  out << Key << "NodeB" << Alias("Node");
+
+  out << EndMap;
+
+  ExpectEmit(R"(Node: &Node
+  k: [{i: 0}, {i: 1}]
+NodeA: *Node
+NodeB: *Node)");
+}
+
+TEST_F(EmitterTest, ComplexFlowSeqEmbeddingAMapWithNewLineUsingAliases2) {
+  out << BeginMap;
+
+  out << Key << "Seq" << Anchor("Seq") << Flow << BeginSeq;
+  out << BeginMap << Key << "i" << Value << 0 << EndMap;
+  out << YAML::Newline;
+  out << BeginMap << Key << "i" << Value << 1 << EndMap;
+  out << YAML::Newline;
+  out << EndSeq;
+
+  out << Key << "NodeA" << Value << BeginMap;
+  out << Key << "k" << Value << Alias("Seq") << EndMap;
+  out << Key << "NodeB" << Value << BeginMap;
+  out << Key << "k" << Value << Alias("Seq") << EndMap;
+
+  out << EndMap;
+
+  ExpectEmit(R"(Seq: &Seq [{i: 0},
+  {i: 1},
+  ]
+NodeA:
+  k: *Seq
+NodeB:
+  k: *Seq)");
+}
+
+TEST_F(EmitterTest, ComplexFlowSeqEmbeddingAMapUsingAliases2) {
+  out << BeginMap;
+
+  out << Key << "Seq" << Anchor("Seq") << Value << Flow << BeginSeq;
+  out << BeginMap << Key << "i" << Value << 0 << EndMap;
+  out << BeginMap << Key << "i" << Value << 1 << EndMap;
+  out << EndSeq;
+
+  out << Key << "NodeA" << Value << BeginMap;
+  out << Key << "k" << Value << Alias("Seq") << EndMap;
+  out << Key << "NodeB" << Value << BeginMap;
+  out << Key << "k" << Value << Alias("Seq") << EndMap;
+
+  out << EndMap;
+
+  ExpectEmit(R"(Seq: &Seq [{i: 0}, {i: 1}]
+NodeA:
+  k: *Seq
+NodeB:
+  k: *Seq)");
+}
+
+TEST_F(EmitterTest, ComplexFlowSeqEmbeddingAMapWithNewLineUsingAliases3) {
+  out << BeginMap;
+
+  out << Key << "Keys" << Value << Flow << BeginSeq;
+  out << Anchor("k0") << BeginMap << Key << "i" << Value << 0 << EndMap
+      << Newline;
+  out << Anchor("k1") << BeginMap << Key << "i" << Value << 1 << EndMap
+      << Newline;
+  out << EndSeq;
+
+  out << Key << "NodeA" << Value << BeginMap;
+  out << Key << "k" << Value << Flow << BeginSeq;
+  out << Alias("k0") << Newline << Alias("k1") << Newline;
+  out << EndSeq << EndMap;
+
+  out << Key << "NodeB" << Value << BeginMap;
+  out << Key << "k" << Value << Flow << BeginSeq;
+  out << Alias("k0") << Newline << Alias("k1") << Newline;
+  out << EndSeq << EndMap;
+
+  out << EndMap;
+
+  ExpectEmit(R"(Keys: [&k0 {i: 0},
+&k1 {i: 1},
+  ]
+NodeA:
+  k: [*k0,
+  *k1,
+    ]
+NodeB:
+  k: [*k0,
+  *k1,
+    ])");
+}
+
+TEST_F(EmitterTest, ComplexFlowSeqEmbeddingAMapUsingAliases3a) {
+  out << BeginMap;
+
+  out << Key << "Keys" << Value << BeginSeq;
+  out << Anchor("k0") << BeginMap << Key << "i" << Value << 0 << EndMap;
+  out << Anchor("k1") << BeginMap << Key << "i" << Value << 1 << EndMap;
+  out << EndSeq;
+
+  out << Key << "NodeA" << Value << BeginMap;
+  out << Key << "k" << Value << Flow << BeginSeq;
+  out << Alias("k0") << Alias("k1");
+  out << EndSeq << EndMap;
+
+  out << Key << "NodeB" << Value << BeginMap;
+  out << Key << "k" << Value << Flow << BeginSeq;
+  out << Alias("k0") << Alias("k1");
+  out << EndSeq << EndMap;
+
+  out << EndMap;
+
+  ExpectEmit(R"(Keys:
+  - &k0
+    i: 0
+  - &k1
+    i: 1
+NodeA:
+  k: [*k0, *k1]
+NodeB:
+  k: [*k0, *k1])");
+}
+
+TEST_F(EmitterTest, ComplexFlowSeqEmbeddingAMapUsingAliases3b) {
+  out << BeginMap;
+
+  out << Key << "Keys" << Value << Flow << BeginSeq;
+  out << Anchor("k0") << BeginMap << Key << "i" << Value << 0 << EndMap;
+  out << Anchor("k1") << BeginMap << Key << "i" << Value << 1 << EndMap;
+  out << EndSeq;
+
+  out << Key << "NodeA" << Value << BeginMap;
+  out << Key << "k" << Value << Flow << BeginSeq;
+  out << Alias("k0") << Alias("k1");
+  out << EndSeq << EndMap;
+
+  out << Key << "NodeB" << Value << BeginMap;
+  out << Key << "k" << Value << Flow << BeginSeq;
+  out << Alias("k0") << Alias("k1");
+  out << EndSeq << EndMap;
+
+  out << EndMap;
+
+  ExpectEmit(R"(Keys: [&k0 {i: 0}, &k1 {i: 1}]
+NodeA:
+  k: [*k0, *k1]
+NodeB:
+  k: [*k0, *k1])");
 }
 
 class EmitterErrorTest : public ::testing::Test {

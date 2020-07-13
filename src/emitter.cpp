@@ -49,6 +49,10 @@ bool Emitter::SetBoolFormat(EMITTER_MANIP value) {
   return ok;
 }
 
+bool Emitter::SetNullFormat(EMITTER_MANIP value) {
+  return m_pState->SetNullFormat(value, FmtScope::Global);
+}
+
 bool Emitter::SetIntBase(EMITTER_MANIP value) {
   return m_pState->SetIntFormat(value, FmtScope::Global);
 }
@@ -84,6 +88,10 @@ bool Emitter::SetFloatPrecision(std::size_t n) {
 
 bool Emitter::SetDoublePrecision(std::size_t n) {
   return m_pState->SetDoublePrecision(n, FmtScope::Global);
+}
+
+void Emitter::RestoreGlobalModifiedSettings() {
+  m_pState->RestoreGlobalModifiedSettings();
 }
 
 // SetLocalValue
@@ -556,6 +564,8 @@ void Emitter::BlockMapPrepareLongKey(EmitterNodeType::value child) {
       break;
     case EmitterNodeType::BlockSeq:
     case EmitterNodeType::BlockMap:
+      if (m_pState->HasBegunContent())
+        m_stream << "\n";
       break;
   }
 }
@@ -579,8 +589,12 @@ void Emitter::BlockMapPrepareLongKeyValue(EmitterNodeType::value child) {
     case EmitterNodeType::Scalar:
     case EmitterNodeType::FlowSeq:
     case EmitterNodeType::FlowMap:
+      SpaceOrIndentTo(true, curIndent + 1);
+      break;
     case EmitterNodeType::BlockSeq:
     case EmitterNodeType::BlockMap:
+      if (m_pState->HasBegunContent())
+        m_stream << "\n";
       SpaceOrIndentTo(true, curIndent + 1);
       break;
   }
@@ -764,6 +778,21 @@ const char* Emitter::ComputeFullBoolName(bool b) const {
                          // these answers
 }
 
+const char* Emitter::ComputeNullName() const {
+  switch (m_pState->GetNullFormat()) {
+    case LowerNull:
+      return "null";
+    case UpperNull:
+      return "NULL";
+    case CamelNull:
+      return "Null";
+    case TildeNull:
+      // fallthrough
+    default:
+      return "~";
+  }
+}
+
 Emitter& Emitter::Write(bool b) {
   if (!good())
     return *this;
@@ -887,7 +916,7 @@ Emitter& Emitter::Write(const _Null& /*null*/) {
 
   PrepareNode(EmitterNodeType::Scalar);
 
-  m_stream << "~";
+  m_stream << ComputeNullName();
 
   StartedScalar();
 
