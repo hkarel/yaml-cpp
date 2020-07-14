@@ -13,7 +13,7 @@ Product {
         return File.exists(cpp.toolchainPathPrefix + "/gcc-ar") ? "gcc-ar" : "ar";
     }
     cpp.cxxFlags: [
-        "-std=c++11",
+        "-std=c++14",
         "-ggdb3",
         "-Wall",
         "-Wextra",
