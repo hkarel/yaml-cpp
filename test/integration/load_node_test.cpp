@@ -284,6 +284,11 @@ TEST(NodeTest, SpecialFlow) {
       {"{:a}", NodeType::Map, 1, "{:a: ~}"},
       {"{,}", NodeType::Map, 1, "{~: ~}"},
       {"{a:,}", NodeType::Map, 1, "{a: ~}"},
+      //testcase for the trailing TAB of scalar
+      {"key\t: value\t", NodeType::Map, 1, "key: value"},
+      {"key\t: value\t #comment", NodeType::Map, 1, "key: value"},
+      {"{key\t: value\t}", NodeType::Map, 1, "{key: value}"},
+      {"{key\t: value\t #comment\n}", NodeType::Map, 1, "{key: value}"},
   };
   for (const SingleNodeTestCase& test : tests) {
     Node node = Load(test.input);
@@ -314,6 +319,8 @@ TEST(NodeTest, IncorrectFlow) {
 TEST(NodeTest, LoadTildeAsNull) {
   Node node = Load("~");
   ASSERT_TRUE(node.IsNull());
+  EXPECT_EQ(node.as<std::string>(), "null");
+  EXPECT_EQ(node.as<std::string>("~"), "null");
 }
 
 TEST(NodeTest, LoadNullWithStrTag) {
