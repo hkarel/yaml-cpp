@@ -29,6 +29,7 @@ EmitterState::EmitterState()
       m_groups{},
       m_curIndent(0),
       m_hasAnchor(false),
+      m_hasAlias(false),
       m_hasTag(false),
       m_hasNonContent(false),
       m_docCount(0) {}
@@ -52,6 +53,8 @@ void EmitterState::SetLocalValue(EMITTER_MANIP value) {
 }
 
 void EmitterState::SetAnchor() { m_hasAnchor = true; }
+
+void EmitterState::SetAlias() { m_hasAlias = true; }
 
 void EmitterState::SetTag() { m_hasTag = true; }
 
@@ -87,6 +90,7 @@ void EmitterState::StartedNode() {
   }
 
   m_hasAnchor = false;
+  m_hasAlias = false;
   m_hasTag = false;
   m_hasNonContent = false;
 }
@@ -158,6 +162,13 @@ void EmitterState::EndedGroup(GroupType::value type) {
       return SetError(ErrorMsg::UNEXPECTED_END_SEQ);
     }
     return SetError(ErrorMsg::UNEXPECTED_END_MAP);
+  }
+
+  if (m_hasTag) {
+    SetError(ErrorMsg::INVALID_TAG);
+  }
+  if (m_hasAnchor) {
+    SetError(ErrorMsg::INVALID_ANCHOR);
   }
 
   // get rid of the current group

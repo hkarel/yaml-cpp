@@ -138,6 +138,56 @@ TEST_F(EmitterTest, EmptyFlowSeq) {
   ExpectEmit("[]");
 }
 
+TEST_F(EmitterTest, EmptyBlockSeqWithBegunContent) {
+  out << BeginSeq;
+  out << BeginSeq << Comment("comment") << EndSeq;
+  out << BeginSeq << Newline << EndSeq;
+  out << EndSeq;
+
+  ExpectEmit(R"(-
+# comment
+  []
+-
+
+  [])");
+}
+
+TEST_F(EmitterTest, EmptyBlockMapWithBegunContent) {
+  out << BeginSeq;
+  out << BeginMap << Comment("comment") << EndMap;
+  out << BeginMap << Newline << EndMap;
+  out << EndSeq;
+
+  ExpectEmit(R"(-  # comment
+  {}
+-
+  {})");
+}
+
+TEST_F(EmitterTest, EmptyFlowSeqWithBegunContent) {
+  out << Flow;
+  out << BeginSeq;
+  out << BeginSeq << Comment("comment") << EndSeq;
+  out << BeginSeq << Newline << EndSeq;
+  out << EndSeq;
+
+  ExpectEmit(R"([[  # comment
+  ], [
+  ]])");
+}
+
+TEST_F(EmitterTest, EmptyFlowMapWithBegunContent) {
+  out << Flow;
+  out << BeginSeq;
+  out << BeginMap << Comment("comment") << EndMap;
+  out << BeginMap << Newline << EndMap;
+  out << EndSeq;
+
+  ExpectEmit(R"([{  # comment
+  }, {
+  }])");
+}
+
 TEST_F(EmitterTest, NestedBlockSeq) {
   out << BeginSeq;
   out << "item 1";
@@ -378,6 +428,21 @@ TEST_F(EmitterTest, AliasAndAnchor) {
   out << EndSeq;
 
   ExpectEmit("- &fred\n  name: Fred\n  age: 42\n- *fred");
+}
+
+TEST_F(EmitterTest, AliasOnKey) {
+  out << BeginSeq;
+  out << Anchor("name") << "Name";
+  out << BeginMap;
+  out << Key << Alias("name") << Value << "Fred";
+  out << EndMap;
+  out << Flow << BeginMap;
+  out << Key << Alias("name") << Value << "Mike";
+  out << EndMap;
+  out << EndSeq;
+  ExpectEmit(R"(- &name Name
+- *name : Fred
+- {*name : Mike})");
 }
 
 TEST_F(EmitterTest, AliasAndAnchorWithNull) {
@@ -804,7 +869,7 @@ TEST_F(EmitterTest, OutputCharset) {
   out << "\x24 \xC2\xA2 \xE2\x82\xAC";
   out << EndSeq;
 
-  ExpectEmit("- $ ¢ €\n- \"$ \\xa2 \\u20ac\"");
+  ExpectEmit("- \x24 \xC2\xA2 \xE2\x82\xAC\n- \"\x24 \\xa2 \\u20ac\"");
 }
 
 TEST_F(EmitterTest, EscapedUnicode) {
@@ -1551,6 +1616,26 @@ TEST_F(EmitterErrorTest, BadLocalTag) {
   out << LocalTag("e!far") << "bar";
 
   ExpectEmitError("invalid tag");
+}
+
+TEST_F(EmitterErrorTest, BadTagAndTag) {
+  out << VerbatimTag("!far") << VerbatimTag("!foo") << "bar";
+  ExpectEmitError(ErrorMsg::INVALID_TAG);
+}
+
+TEST_F(EmitterErrorTest, BadAnchorAndAnchor) {
+  out << Anchor("far") << Anchor("foo") << "bar";
+  ExpectEmitError(ErrorMsg::INVALID_ANCHOR);
+}
+
+TEST_F(EmitterErrorTest, BadEmptyAnchorOnGroup) {
+  out << BeginSeq << "bar" << Anchor("foo") << EndSeq;
+  ExpectEmitError(ErrorMsg::INVALID_ANCHOR);
+}
+
+TEST_F(EmitterErrorTest, BadEmptyTagOnGroup) {
+  out << BeginSeq << "bar" << VerbatimTag("!foo") << EndSeq;
+  ExpectEmitError(ErrorMsg::INVALID_TAG);
 }
 
 TEST_F(EmitterErrorTest, ExtraEndSeq) {

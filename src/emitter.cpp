@@ -205,6 +205,7 @@ void Emitter::EmitBeginSeq() {
 void Emitter::EmitEndSeq() {
   if (!good())
     return;
+  FlowType::value originalType = m_pState->CurGroupFlowType();
 
   if (m_pState->CurGroupChildCount() == 0)
     m_pState->ForceFlow();
@@ -213,8 +214,12 @@ void Emitter::EmitEndSeq() {
     if (m_stream.comment())
       m_stream << "\n";
     m_stream << IndentTo(m_pState->CurIndent());
-    if (m_pState->CurGroupChildCount() == 0)
+    if (originalType == FlowType::Block) {
       m_stream << "[";
+    } else {
+      if (m_pState->CurGroupChildCount() == 0 && !m_pState->HasBegunNode())
+        m_stream << "[";
+    }
     m_stream << "]";
   }
 
@@ -235,6 +240,7 @@ void Emitter::EmitBeginMap() {
 void Emitter::EmitEndMap() {
   if (!good())
     return;
+  FlowType::value originalType = m_pState->CurGroupFlowType();
 
   if (m_pState->CurGroupChildCount() == 0)
     m_pState->ForceFlow();
@@ -243,8 +249,12 @@ void Emitter::EmitEndMap() {
     if (m_stream.comment())
       m_stream << "\n";
     m_stream << IndentTo(m_pState->CurIndent());
-    if (m_pState->CurGroupChildCount() == 0)
+    if (originalType == FlowType::Block) {
       m_stream << "{";
+    } else {
+      if (m_pState->CurGroupChildCount() == 0 && !m_pState->HasBegunNode())
+        m_stream << "{";
+    }
     m_stream << "}";
   }
 
@@ -494,6 +504,9 @@ void Emitter::FlowMapPrepareSimpleKeyValue(EmitterNodeType::value child) {
     if (m_stream.comment())
       m_stream << "\n";
     m_stream << IndentTo(lastIndent);
+    if (m_pState->HasAlias()) {
+      m_stream << " ";
+    }
     m_stream << ":";
   }
 
@@ -633,6 +646,9 @@ void Emitter::BlockMapPrepareSimpleKeyValue(EmitterNodeType::value child) {
   const std::size_t nextIndent = curIndent + m_pState->CurGroupIndent();
 
   if (!m_pState->HasBegunNode()) {
+    if (m_pState->HasAlias()) {
+      m_stream << " ";
+    }
     m_stream << ":";
   }
 
@@ -853,6 +869,8 @@ Emitter& Emitter::Write(const _Alias& alias) {
   }
 
   StartedScalar();
+
+  m_pState->SetAlias();
 
   return *this;
 }
