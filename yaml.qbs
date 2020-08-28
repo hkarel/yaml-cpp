@@ -22,10 +22,10 @@ Product {
     cpp.includePaths: ["include"]
 
     files: [
-        "include/yaml-cpp/*.h",
         "include/yaml-cpp/contrib/*.h",
-        "include/yaml-cpp/node/*.h",
         "include/yaml-cpp/node/detail/*.h",
+        "include/yaml-cpp/node/*.h",
+        "include/yaml-cpp/*.h",
         "src/*.cpp",
         "src/*.h",
     ]
