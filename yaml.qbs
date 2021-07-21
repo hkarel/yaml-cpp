@@ -8,18 +8,14 @@ Product {
     type: "staticlibrary"
     Depends { name: "cpp" }
 
-    cpp.archiverName: {
-        // If is used not system default compiler
-        return File.exists(cpp.toolchainPathPrefix + "/gcc-ar") ? "gcc-ar" : "ar";
-    }
     cpp.cxxFlags: [
-        "-std=c++14",
         "-ggdb3",
         "-Wall",
         "-Wextra",
         "-Wno-unused-parameter",
     ]
     cpp.includePaths: ["include"]
+    cpp.cxxLanguageVersion: "c++17"
 
     files: [
         "include/yaml-cpp/contrib/*.h",
