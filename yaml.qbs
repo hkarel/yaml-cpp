@@ -1,5 +1,4 @@
 import qbs
-import qbs.File
 
 Product {
     name: "Yaml"
@@ -8,6 +7,14 @@ Product {
     type: "staticlibrary"
     Depends { name: "cpp" }
 
+    //Properties {
+    //    condition: type.contains("staticlibrary")
+    //    cpp.defines: outer.concat(["YAML_CPP_STATIC_DEFINE"])
+    //}
+
+    cpp.defines: [
+        "YAML_CPP_STATIC_DEFINE"
+    ]
     cpp.cxxFlags: [
         "-ggdb3",
         "-Wall",
@@ -28,5 +35,6 @@ Product {
     Export {
         Depends { name: "cpp" }
         cpp.systemIncludePaths: ["include"]
+        cpp.defines: ["YAML_CPP_STATIC_DEFINE"]
     }
 }
