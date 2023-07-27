@@ -5,6 +5,16 @@ Product {
     targetName: "yaml"
 
     type: "staticlibrary"
+
+    Properties {
+        type: "dynamiclibrary"
+        condition: project.yamlDynamicLib === true
+    }
+    Properties {
+        destinationDirectory: project.destinationLibDirectory
+        condition: project.destinationLibDirectory !== undefined
+    }
+
     Depends { name: "cpp" }
 
     //Properties {
