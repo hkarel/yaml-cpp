@@ -21,6 +21,7 @@
 #include "yaml-cpp/emittermanip.h"
 #include "yaml-cpp/null.h"
 #include "yaml-cpp/ostream_wrapper.h"
+#include "yaml-cpp/fptostring.h"
 
 namespace YAML {
 class Binary;
@@ -141,6 +142,7 @@ inline Emitter& Emitter::WriteIntegralType(T value) {
   PrepareNode(EmitterNodeType::Scalar);
 
   std::stringstream stream;
+  stream.imbue(std::locale("C"));
   PrepareIntegralStream(stream);
   stream << value;
   m_stream << stream.str();
@@ -158,6 +160,7 @@ inline Emitter& Emitter::WriteStreamable(T value) {
   PrepareNode(EmitterNodeType::Scalar);
 
   std::stringstream stream;
+  stream.imbue(std::locale("C"));
   SetStreamablePrecision<T>(stream);
 
   bool special = false;
@@ -178,7 +181,7 @@ inline Emitter& Emitter::WriteStreamable(T value) {
   }
 
   if (!special) {
-    stream << value;
+    stream << FpToString(value, stream.precision());
   }
   m_stream << stream.str();
 
