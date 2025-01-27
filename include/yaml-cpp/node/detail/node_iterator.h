@@ -22,22 +22,41 @@ struct iterator_type {
   enum value { NoneType, Sequence, Map };
 };
 
+//template <typename V>
+//struct node_iterator_value : public std::pair<V*, V*> {
+//  using kv = std::pair<V*, V*>;
+
+//  node_iterator_value() : kv(), pNode(nullptr) {}
+//  explicit node_iterator_value(V& rhs) : kv(), pNode(&rhs) {}
+//  explicit node_iterator_value(V& key, V& value) : kv(&key, &value), pNode(nullptr) {}
+
+//  V& operator*() const { return *pNode; }
+//  V& operator->() const { return *pNode; }
+
+//  V* pNode;
+//};
+
 template <typename V>
-struct node_iterator_value : public std::pair<V*, V*> {
-  using kv = std::pair<V*, V*>;
+struct node_iterator_value;
 
-  node_iterator_value() : kv(), pNode(nullptr) {}
-  explicit node_iterator_value(V& rhs) : kv(), pNode(&rhs) {}
-  explicit node_iterator_value(V& key, V& value) : kv(&key, &value), pNode(nullptr) {}
+using kv_pair = std::pair<node_ptr, node_ptr>;
 
-  V& operator*() const { return *pNode; }
-  V& operator->() const { return *pNode; }
+template <>
+struct node_iterator_value<node_ptr> : public kv_pair {
 
-  V* pNode;
+  node_iterator_value() : kv_pair() {}
+  explicit node_iterator_value(const node_ptr& rhs) : kv_pair(), pNode(rhs) {}
+  explicit node_iterator_value(const node_ptr& key,
+                               const node_ptr& value) : kv_pair(key, value) {}
+
+  node_ptr operator*() const { return pNode; }
+  node_ptr operator->() const { return pNode; }
+
+  node_ptr pNode;
 };
 
-using node_seq = std::vector<node *>;
-using node_map = std::vector<std::pair<node*, node*>>;
+using node_seq = std::vector<node_ptr>;
+using node_map = std::vector<std::pair<node_ptr, node_ptr>>;
 
 template <typename V>
 struct node_iterator_type {
@@ -147,9 +166,9 @@ class node_iterator_base {
       case iterator_type::NoneType:
         return value_type();
       case iterator_type::Sequence:
-        return value_type(**m_seqIt);
+        return value_type(*m_seqIt);
       case iterator_type::Map:
-        return value_type(*m_mapIt->first, *m_mapIt->second);
+        return value_type(m_mapIt->first, m_mapIt->second);
     }
     return value_type();
   }
@@ -173,8 +192,11 @@ class node_iterator_base {
   MapIter m_mapIt, m_mapEnd;
 };
 
-using node_iterator = node_iterator_base<node>;
-using const_node_iterator = node_iterator_base<const node>;
+//using node_iterator = node_iterator_base<node>;
+//using const_node_iterator = node_iterator_base<const node>;
+using node_iterator = node_iterator_base<node_ptr>;
+using const_node_iterator = node_iterator_base<const node_ptr>;
+
 }
 }
 

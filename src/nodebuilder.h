@@ -31,7 +31,7 @@ class NodeBuilder : public EventHandler {
   NodeBuilder(NodeBuilder&&) = delete;
   NodeBuilder& operator=(const NodeBuilder&) = delete;
   NodeBuilder& operator=(NodeBuilder&&) = delete;
-  ~NodeBuilder() override;
+  ~NodeBuilder() = default;
 
   Node Root();
 
@@ -52,20 +52,19 @@ class NodeBuilder : public EventHandler {
   void OnMapEnd() override;
 
  private:
-  detail::node& Push(const Mark& mark, anchor_t anchor);
-  void Push(detail::node& node);
+  detail::node_ptr Push(const Mark& mark, anchor_t anchor);
+  void Push(const detail::node_ptr& node);
   void Pop();
-  void RegisterAnchor(anchor_t anchor, detail::node& node);
+  void RegisterAnchor(anchor_t anchor, const detail::node_ptr& node);
 
  private:
-  detail::shared_memory_holder m_pMemory;
-  detail::node* m_pRoot;
+  detail::node_ptr m_pRoot;
 
-  using Nodes = std::vector<detail::node *>;
+  using Nodes = std::vector<detail::node_ptr>;
   Nodes m_stack;
   Nodes m_anchors;
 
-  using PushedKey = std::pair<detail::node*, bool>;
+  using PushedKey = std::pair<detail::node_ptr, bool>;
   std::vector<PushedKey> m_keys;
   std::size_t m_mapDepth;
 };

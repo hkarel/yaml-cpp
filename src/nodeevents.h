@@ -7,11 +7,12 @@
 #pragma once
 #endif
 
+#include "yaml-cpp/anchor.h"
+#include "yaml-cpp/node/detail/node.h"
+#include "yaml-cpp/node/detail/node_ref.h"
+
 #include <map>
 #include <vector>
-
-#include "yaml-cpp/anchor.h"
-#include "yaml-cpp/node/ptr.h"
 
 namespace YAML {
 namespace detail {
@@ -26,6 +27,8 @@ class Node;
 class NodeEvents {
  public:
   explicit NodeEvents(const Node& node);
+  ~NodeEvents();
+
   NodeEvents(const NodeEvents&) = delete;
   NodeEvents(NodeEvents&&) = delete;
   NodeEvents& operator=(const NodeEvents&) = delete;
@@ -34,33 +37,38 @@ class NodeEvents {
   void Emit(EventHandler& handler);
 
  private:
+  struct less {
+    bool operator ()(const detail::node_ref_ptr& l, const detail::node_ref_ptr& r) const {
+      return l.get() < r.get();
+    }
+  };
+
   class AliasManager {
    public:
     AliasManager() : m_anchorByIdentity{}, m_curAnchor(0) {}
 
-    void RegisterReference(const detail::node& node);
-    anchor_t LookupAnchor(const detail::node& node) const;
+    void RegisterReference(const detail::node_ptr& node);
+    anchor_t LookupAnchor(const detail::node_ptr& node) const;
 
    private:
     anchor_t _CreateNewAnchor() { return ++m_curAnchor; }
 
    private:
-    using AnchorByIdentity = std::map<const detail::node_ref*, anchor_t>;
+    using AnchorByIdentity = std::map<const detail::node_ref_ptr, anchor_t, less>;
     AnchorByIdentity m_anchorByIdentity;
 
     anchor_t m_curAnchor;
   };
 
-  void Setup(const detail::node& node);
-  void Emit(const detail::node& node, EventHandler& handler,
+  void Setup(const detail::node_ptr& node);
+  void Emit(const detail::node_ptr& node, EventHandler& handler,
             AliasManager& am) const;
-  bool IsAliased(const detail::node& node) const;
+  bool IsAliased(const detail::node_ptr& node) const;
 
  private:
-  detail::shared_memory_holder m_pMemory;
-  detail::node* m_root;
+  detail::node_ptr m_root;
 
-  using RefCount = std::map<const detail::node_ref*, int>;
+  using RefCount = std::map<detail::node_ref_ptr, int, less>;
   RefCount m_refCount;
 };
 }  // namespace YAML

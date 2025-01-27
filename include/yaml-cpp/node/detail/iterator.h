@@ -44,15 +44,15 @@ class iterator_base {
   using reference = V&;
 
  public:
-  iterator_base() : m_iterator(), m_pMemory() {}
-  explicit iterator_base(base_type rhs, shared_memory_holder pMemory)
-      : m_iterator(rhs), m_pMemory(pMemory) {}
+  iterator_base() : m_iterator() {}
+  explicit iterator_base(base_type rhs)
+      : m_iterator(rhs) {}
 
   template <class W>
   iterator_base(const iterator_base<W>& rhs,
                 typename std::enable_if<std::is_convertible<W*, V*>::value,
                                         enabler>::type = enabler())
-      : m_iterator(rhs.m_iterator), m_pMemory(rhs.m_pMemory) {}
+      : m_iterator(rhs.m_iterator) {}
 
   iterator_base<V>& operator++() {
     ++m_iterator;
@@ -78,9 +78,9 @@ class iterator_base {
   value_type operator*() const {
     const typename base_type::value_type& v = *m_iterator;
     if (v.pNode)
-      return value_type(Node(*v, m_pMemory));
+      return value_type(Node(*v));
     if (v.first && v.second)
-      return value_type(Node(*v.first, m_pMemory), Node(*v.second, m_pMemory));
+      return value_type(Node(v.first), Node(v.second));
     return value_type();
   }
 
@@ -88,7 +88,6 @@ class iterator_base {
 
  private:
   base_type m_iterator;
-  shared_memory_holder m_pMemory;
 };
 }  // namespace detail
 }  // namespace YAML

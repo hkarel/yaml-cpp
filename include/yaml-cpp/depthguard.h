@@ -72,6 +72,6 @@ private:
     int & m_depth;
 };
 
-} // namespace YAML
+}  // namespace YAML
 
 #endif // DEPTH_GUARD_H_00000000000000000000000000000000000000000000000000000000

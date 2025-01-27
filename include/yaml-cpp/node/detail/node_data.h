@@ -27,8 +27,10 @@ class node;
 
 namespace YAML {
 namespace detail {
-class YAML_CPP_API node_data {
+class YAML_CPP_API node_data : public clife_base {
  public:
+  typedef clife_ptr<node_data> ptr;
+
   node_data();
   node_data(const node_data&) = delete;
   node_data& operator=(const node_data&) = delete;
@@ -60,25 +62,24 @@ class YAML_CPP_API node_data {
   node_iterator end();
 
   // sequence
-  void push_back(node& node, const shared_memory_holder& pMemory);
-  void insert(node& key, node& value, const shared_memory_holder& pMemory);
+  void push_back(const node_ptr& node);
+  void insert(const node_ptr& key, const node_ptr& value);
 
   // indexing
   template <typename Key>
-  node* get(const Key& key, shared_memory_holder pMemory) const;
+  node_ptr get(const Key& key) const;
   template <typename Key>
-  node& get(const Key& key, shared_memory_holder pMemory);
+  node_ptr get(const Key& key);
   template <typename Key>
-  bool remove(const Key& key, shared_memory_holder pMemory);
+  bool remove(const Key& key);
 
-  node* get(node& key, const shared_memory_holder& pMemory) const;
-  node& get(node& key, const shared_memory_holder& pMemory);
-  bool remove(node& key, const shared_memory_holder& pMemory);
+  node_ptr get(const node_ptr& key) const;
+  node_ptr get(const node_ptr& key);
+  bool remove(const node_ptr& key);
 
   // map
   template <typename Key, typename Value>
-  void force_insert(const Key& key, const Value& value,
-                    shared_memory_holder pMemory);
+  void force_insert(const Key& key, const Value& value);
 
  public:
   static const std::string& empty_scalar();
@@ -90,12 +91,12 @@ class YAML_CPP_API node_data {
   void reset_sequence();
   void reset_map();
 
-  void insert_map_pair(node& key, node& value);
-  void convert_to_map(const shared_memory_holder& pMemory);
-  void convert_sequence_to_map(const shared_memory_holder& pMemory);
+  void insert_map_pair(const node_ptr& key, const node_ptr& value);
+  void convert_to_map();
+  void convert_sequence_to_map();
 
   template <typename T>
-  static node& convert_to_node(const T& rhs, shared_memory_holder pMemory);
+  static node_ptr convert_to_node(const T& rhs);
 
  private:
   bool m_isDefined;
@@ -108,16 +109,16 @@ class YAML_CPP_API node_data {
   std::string m_scalar;
 
   // sequence
-  using node_seq = std::vector<node *>;
+  using node_seq = std::vector<node_ptr>;
   node_seq m_sequence;
 
   mutable std::size_t m_seqSize;
 
   // map
-  using node_map = std::vector<std::pair<node*, node*>>;
+  using node_map = std::vector<std::pair<node_ptr, node_ptr>>;
   node_map m_map;
 
-  using kv_pair = std::pair<node*, node*>;
+  using kv_pair = std::pair<node_ptr, node_ptr>;
   using kv_pairs = std::list<kv_pair>;
   mutable kv_pairs m_undefinedPairs;
 };

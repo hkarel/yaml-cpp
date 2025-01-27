@@ -17,19 +17,24 @@
 
 namespace YAML {
 namespace detail {
-class node {
+class node : public clife_base {
  private:
   struct less {
-    bool operator ()(const node* l, const node* r) const {return l->m_index < r->m_index;}
+    bool operator ()(const node_ptr& l, const node_ptr& r) const
+      {return l->m_index < r->m_index;}
   };
 
  public:
-  node() : m_pRef(new node_ref), m_dependencies{}, m_index{} {}
+  typedef clife_ptr<node> ptr;
+
+  node();
+  ~node();
+
   node(const node&) = delete;
   node& operator=(const node&) = delete;
 
-  bool is(const node& rhs) const { return m_pRef == rhs.m_pRef; }
-  const node_ref* ref() const { return m_pRef.get(); }
+  bool is(const node::ptr& rhs) const { return m_pRef.get() == rhs->m_pRef.get(); }
+  const node_ref::ptr ref() const { return m_pRef; }
 
   bool is_defined() const { return m_pRef->is_defined(); }
   const Mark& mark() const { return m_pRef->mark(); }
@@ -40,135 +45,72 @@ class node {
   EmitterStyle::value style() const { return m_pRef->style(); }
 
   template <typename T>
-  bool equals(const T& rhs, shared_memory_holder pMemory);
-  bool equals(const char* rhs, shared_memory_holder pMemory);
+  bool equals(const T& rhs);
+  bool equals(const char* rhs);
 
-  void mark_defined() {
-    if (is_defined())
-      return;
+  void mark_defined();
+  void add_dependency(const node::ptr& rhs);
+  void set_ref (const node::ptr& rhs);
+  void set_data(const node::ptr& rhs);
 
-    m_pRef->mark_defined();
-    for (node* dependency : m_dependencies)
-      dependency->mark_defined();
-    m_dependencies.clear();
-  }
+  void set_mark(const Mark& mark);
 
-  void add_dependency(node& rhs) {
-    if (is_defined())
-      rhs.mark_defined();
-    else
-      m_dependencies.insert(&rhs);
-  }
-
-  void set_ref(const node& rhs) {
-    if (rhs.is_defined())
-      mark_defined();
-    m_pRef = rhs.m_pRef;
-  }
-  void set_data(const node& rhs) {
-    if (rhs.is_defined())
-      mark_defined();
-    m_pRef->set_data(*rhs.m_pRef);
-  }
-
-  void set_mark(const Mark& mark) { m_pRef->set_mark(mark); }
-
-  void set_type(NodeType::value type) {
-    if (type != NodeType::Undefined)
-      mark_defined();
-    m_pRef->set_type(type);
-  }
-  void set_null() {
-    mark_defined();
-    m_pRef->set_null();
-  }
-  void set_scalar(const std::string& scalar) {
-    mark_defined();
-    m_pRef->set_scalar(scalar);
-  }
-  void set_tag(const std::string& tag) {
-    mark_defined();
-    m_pRef->set_tag(tag);
-  }
+  void set_type(NodeType::value type);
+  void set_null();
+  void set_scalar(const std::string& scalar);
+  void set_tag(const std::string& tag);
 
   // style
-  void set_style(EmitterStyle::value style) {
-    mark_defined();
-    m_pRef->set_style(style);
-  }
+  void set_style(EmitterStyle::value style);
 
   // size/iterator
-  std::size_t size() const { return m_pRef->size(); }
+  std::size_t size() const;
 
-  const_node_iterator begin() const {
-    return static_cast<const node_ref&>(*m_pRef).begin();
-  }
-  node_iterator begin() { return m_pRef->begin(); }
+  const_node_iterator begin() const;
+  node_iterator begin();
 
-  const_node_iterator end() const {
-    return static_cast<const node_ref&>(*m_pRef).end();
-  }
-  node_iterator end() { return m_pRef->end(); }
+  const_node_iterator end() const;
+  node_iterator end();
 
   // sequence
-  void push_back(node& input, shared_memory_holder pMemory) {
-    m_pRef->push_back(input, pMemory);
-    input.add_dependency(*this);
-    m_index = m_amount.fetch_add(1);
-  }
-  void insert(node& key, node& value, shared_memory_holder pMemory) {
-    m_pRef->insert(key, value, pMemory);
-    key.add_dependency(*this);
-    value.add_dependency(*this);
-  }
+  void push_back(const node::ptr& input);
+  void insert(const node::ptr& key, const node::ptr& value);
 
   // indexing
   template <typename Key>
-  node* get(const Key& key, shared_memory_holder pMemory) const {
+  node::ptr get(const Key& key) const {
     // NOTE: this returns a non-const node so that the top-level Node can wrap
     // it, and returns a pointer so that it can be nullptr (if there is no such
     // key).
-    return static_cast<const node_ref&>(*m_pRef).get(key, pMemory);
+    return static_cast<const node_ref*>(m_pRef.get())->get(key);
   }
   template <typename Key>
-  node& get(const Key& key, shared_memory_holder pMemory) {
-    node& value = m_pRef->get(key, pMemory);
-    value.add_dependency(*this);
+  node::ptr get(const Key& key) {
+    node::ptr value = m_pRef->get(key);
+    value->add_dependency(node::ptr(this));
     return value;
   }
   template <typename Key>
-  bool remove(const Key& key, shared_memory_holder pMemory) {
-    return m_pRef->remove(key, pMemory);
+  bool remove(const Key& key) {
+    return m_pRef->remove(key);
   }
 
-  node* get(node& key, shared_memory_holder pMemory) const {
-    // NOTE: this returns a non-const node so that the top-level Node can wrap
-    // it, and returns a pointer so that it can be nullptr (if there is no such
-    // key).
-    return static_cast<const node_ref&>(*m_pRef).get(key, pMemory);
-  }
-  node& get(node& key, shared_memory_holder pMemory) {
-    node& value = m_pRef->get(key, pMemory);
-    key.add_dependency(*this);
-    value.add_dependency(*this);
-    return value;
-  }
-  bool remove(node& key, shared_memory_holder pMemory) {
-    return m_pRef->remove(key, pMemory);
-  }
+  node::ptr get(const node::ptr& key) const;
+  node::ptr get(const node::ptr& key);
+
+  bool remove(const node::ptr& key);
 
   // map
   template <typename Key, typename Value>
-  void force_insert(const Key& key, const Value& value,
-                    shared_memory_holder pMemory) {
-    m_pRef->force_insert(key, value, pMemory);
+  void force_insert(const Key& key, const Value& value) {
+    m_pRef->force_insert(key, value);
   }
 
  private:
-  shared_node_ref m_pRef;
-  using nodes = std::set<node*, less>;
+  node_ref::ptr m_pRef;
+  using nodes = std::set<node::ptr, less>;
   nodes m_dependencies;
-  size_t m_index;
+  size_t m_index = {0};
   static YAML_CPP_API std::atomic<size_t> m_amount;
 };
 }  // namespace detail

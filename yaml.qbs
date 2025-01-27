@@ -39,6 +39,8 @@ Product {
         "include/yaml-cpp/node/detail/*.h",
         "include/yaml-cpp/node/*.h",
         "include/yaml-cpp/*.h",
+        "src/node/detail/*.cpp",
+        "src/node/*.cpp",
         "src/*.cpp",
         "src/*.h",
     ]

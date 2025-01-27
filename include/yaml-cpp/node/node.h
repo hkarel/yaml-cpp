@@ -42,12 +42,12 @@ class YAML_CPP_API Node {
   using const_iterator = YAML::const_iterator;
 
   Node();
-  explicit Node(NodeType::value type);
   template <typename T>
   explicit Node(const T& rhs);
+  Node(const Node& rhs) = default;
+
+  explicit Node(NodeType::value type);
   explicit Node(const detail::iterator_value& rhs);
-  Node(const Node& rhs);
-  ~Node();
 
   YAML::Mark Mark() const;
   NodeType::value Type() const;
@@ -102,11 +102,18 @@ class YAML_CPP_API Node {
   const Node operator[](const Key& key) const;
   template <typename Key>
   Node operator[](const Key& key);
+
+  template <typename Key>
+  Node get(const Key& key) const;
+  template <typename Key>
+  Node get(const Key& key);
+
   template <typename Key>
   bool remove(const Key& key);
 
   const Node operator[](const Node& key) const;
   Node operator[](const Node& key);
+
   bool remove(const Node& key);
 
   // map
@@ -117,12 +124,13 @@ class YAML_CPP_API Node {
   enum Zombie { ZombieNode };
   explicit Node(Zombie);
   explicit Node(Zombie, const std::string&);
-  explicit Node(detail::node& node, detail::shared_memory_holder pMemory);
+  explicit Node(const detail::node_ptr& node);
 
   void EnsureNodeExists() const;
 
   template <typename T>
   void Assign(const T& rhs);
+  void Assign(const std::string& rhs);
   void Assign(const char* rhs);
   void Assign(char* rhs);
 
@@ -130,11 +138,10 @@ class YAML_CPP_API Node {
   void AssignNode(const Node& rhs);
 
  private:
-  bool m_isValid;
+  bool m_isValid = {false};
   // String representation of invalid key, if the node is invalid.
   std::string m_invalidKey;
-  mutable detail::shared_memory_holder m_pMemory;
-  mutable detail::node* m_pNode;
+  mutable detail::node_ptr m_pNode;
 };
 
 YAML_CPP_API bool operator==(const Node& lhs, const Node& rhs);
@@ -143,6 +150,7 @@ YAML_CPP_API Node Clone(const Node& node);
 
 template <typename T>
 struct convert;
-}
+
+}  // namespace YAML
 
 #endif  // NODE_NODE_H_62B23520_7C8E_11DE_8A39_0800200C9A66

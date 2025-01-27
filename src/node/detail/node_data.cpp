@@ -206,7 +206,7 @@ void node_data::insert(const node_ptr& key, const node_ptr& value) {
 // indexing
 node_ptr node_data::get(const node_ptr& key) const {
   if (m_type != NodeType::Map) {
-    return {};
+    return nullptr;
   }
 
   for (const auto& it : m_map) {
@@ -214,7 +214,7 @@ node_ptr node_data::get(const node_ptr& key) const {
       return it.second;
   }
 
-  return {};
+  return nullptr;
 }
 
 node_ptr node_data::get(const node_ptr& key) {

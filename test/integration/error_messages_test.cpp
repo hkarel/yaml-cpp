@@ -47,7 +47,7 @@ TEST(ErrorMessageTest, Ex9_1_InvalidNodeErrorMessage) {
   // Test that printable key is part of error message
   EXPECT_THROW_EXCEPTION(YAML::InvalidNode, doc["first"]["fourth"].as<int>(),
                          "invalid node; first invalid key: \"fourth\"");
-  
+
   EXPECT_THROW_EXCEPTION(YAML::InvalidNode, doc["first"][37].as<int>(),
                          "invalid node; first invalid key: \"37\"");
  
