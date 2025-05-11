@@ -17,20 +17,20 @@ Product {
     ]
 
     property var includePaths: [
-        "gtest-1.11.0/googlemock/include",
-        "gtest-1.11.0/googlemock",
-        "gtest-1.11.0/googletest/include",
-        "gtest-1.11.0/googletest",
+        "googletest-1.13.0/googlemock/include",
+        "googletest-1.13.0/googlemock",
+        "googletest-1.13.0/googletest/include",
+        "googletest-1.13.0/googletest",
     ]
     cpp.includePaths: includePaths;
     cpp.cxxLanguageVersion: "c++17"
 
     files: [
-        "gtest-1.11.0/googletest/include/gtest/**/*.h",
-        "gtest-1.11.0/googletest/src/*.cc",
-        "gtest-1.11.0/googletest/src/*.h",
-        "gtest-1.11.0/googlemock/include/gmock/**/*.h",
-        "gtest-1.11.0/googlemock/src/*.cc",
+        "googletest-1.13.0/googletest/include/gtest/**/*.h",
+        "googletest-1.13.0/googletest/src/*.cc",
+        "googletest-1.13.0/googletest/src/*.h",
+        "googletest-1.13.0/googlemock/include/gmock/**/*.h",
+        "googletest-1.13.0/googlemock/src/*.cc",
     ]
     Export {
         Depends { name: "cpp" }

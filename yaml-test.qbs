@@ -21,6 +21,7 @@ Project {
             "-ggdb3",
             "-Wall",
             "-Wextra",
+            "-Wno-sign-compare",
             "-Wno-unused-parameter",
             "-Wno-unused-variable",
         ]
