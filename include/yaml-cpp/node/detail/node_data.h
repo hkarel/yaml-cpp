@@ -81,6 +81,8 @@ class YAML_CPP_API node_data : public clife_base {
   template <typename Key, typename Value>
   void force_insert(const Key& key, const Value& value);
 
+  void destroy_cross_references();
+
  public:
   static const std::string& empty_scalar();
 
@@ -121,6 +123,8 @@ class YAML_CPP_API node_data : public clife_base {
   using kv_pair = std::pair<node_ptr, node_ptr>;
   using kv_pairs = std::list<kv_pair>;
   mutable kv_pairs m_undefinedPairs;
+
+  bool m_crossReferencesDestroed = {false};
 };
 }
 }

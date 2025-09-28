@@ -42,6 +42,8 @@ class YAML_CPP_API Node {
   using const_iterator = YAML::const_iterator;
 
   Node();
+  ~Node();
+
   template <typename T>
   explicit Node(const T& rhs);
   Node(const Node& rhs) = default;
@@ -119,6 +121,8 @@ class YAML_CPP_API Node {
   // map
   template <typename Key, typename Value>
   void force_insert(const Key& key, const Value& value);
+
+  void destroy_cross_references();
 
  private:
   enum Zombie { ZombieNode };

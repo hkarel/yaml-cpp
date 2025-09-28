@@ -15,6 +15,11 @@ std::string key_to_string(const Key& key) {
 Node::Node()
     : m_isValid(true) {}
 
+Node::~Node() {
+//  if (m_pNode && (m_pNode->clife_count() == 1))
+//    m_pNode->destroy_cross_references();
+}
+
 Node::Node(NodeType::value type)
     : m_isValid(true),
       m_pNode(new detail::node) {
@@ -216,6 +221,11 @@ bool Node::remove(const Node& key) {
   EnsureNodeExists();
   key.EnsureNodeExists();
   return m_pNode->remove(key.m_pNode);
+}
+
+void Node::destroy_cross_references() {
+  if (m_pNode)
+    m_pNode->destroy_cross_references();
 }
 
 Node Clone(const Node& node) {

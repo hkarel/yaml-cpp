@@ -8,6 +8,7 @@ TEST(LoadNodeTest, Reassign) {
   Node node = Load("foo");
   node = Node();
   EXPECT_TRUE(node.IsNull());
+  node.destroy_cross_references();
 }
 
 TEST(LoadNodeTest, FallbackValues) {
@@ -18,6 +19,7 @@ TEST(LoadNodeTest, FallbackValues) {
   EXPECT_EQ(2, node["x"].as<int>());
   EXPECT_EQ(2, node["x"].as<int>(5));
   EXPECT_EQ(5, node["y"].as<int>(5));
+  node.destroy_cross_references();
 }
 
 TEST(LoadNodeTest, NumericConversion) {
@@ -72,6 +74,7 @@ TEST(LoadNodeTest, Binary) {
                        "the short vehemence of any carnal pleasure.\n"),
                    270),
             node[1].as<Binary>());
+  node.destroy_cross_references();
 }
 
 TEST(LoadNodeTest, BinaryWithWhitespaces) {
@@ -92,6 +95,7 @@ TEST(LoadNodeTest, BinaryWithWhitespaces) {
                        "the short vehemence of any carnal pleasure.\n"),
                    270),
             node["binaryText"].as<Binary>());
+  node.destroy_cross_references();
 }
 
 TEST(LoadNodeTest, IterateSequence) {
@@ -104,6 +108,7 @@ TEST(LoadNodeTest, IterateSequence) {
     EXPECT_EQ(x, it->as<int>());
   }
   EXPECT_EQ(4, i);
+  node.destroy_cross_references();
 }
 
 TEST(LoadNodeTest, IterateMap) {
@@ -115,6 +120,7 @@ TEST(LoadNodeTest, IterateMap) {
     EXPECT_EQ(it->second.as<char>(), it->first.as<char>() + 'A' - 'a');
   }
   EXPECT_EQ(3, i);
+  node.destroy_cross_references();
 }
 
 #ifdef BOOST_FOREACH
@@ -142,6 +148,8 @@ TEST(LoadNodeTest, CloneScalar) {
   EXPECT_FALSE(clone == node);
   EXPECT_EQ(clone.as<std::string>(), node.as<std::string>());
   EXPECT_EQ(clone.Tag(), node.Tag());
+  node.destroy_cross_references();
+  clone.destroy_cross_references();
 }
 
 TEST(LoadNodeTest, CloneSeq) {
@@ -153,6 +161,8 @@ TEST(LoadNodeTest, CloneSeq) {
   for (std::size_t i = 0; i < node.size(); i++) {
     EXPECT_EQ(clone[i].as<int>(), node[i].as<int>());
   }
+  node.destroy_cross_references();
+  clone.destroy_cross_references();
 }
 
 TEST(LoadNodeTest, CloneMap) {
@@ -162,6 +172,8 @@ TEST(LoadNodeTest, CloneMap) {
   EXPECT_EQ(NodeType::Map, clone.Type());
   EXPECT_EQ(clone.size(), node.size());
   EXPECT_EQ(clone["foo"].as<std::string>(), node["foo"].as<std::string>());
+  node.destroy_cross_references();
+  clone.destroy_cross_references();
 }
 
 TEST(LoadNodeTest, CloneAlias) {
@@ -171,6 +183,8 @@ TEST(LoadNodeTest, CloneAlias) {
   EXPECT_EQ(NodeType::Sequence, clone.Type());
   EXPECT_EQ(clone.size(), node.size());
   EXPECT_EQ(clone[0], clone);
+  node.destroy_cross_references();
+  clone.destroy_cross_references();
 }
 
 TEST(LoadNodeTest, ForceInsertIntoMap) {

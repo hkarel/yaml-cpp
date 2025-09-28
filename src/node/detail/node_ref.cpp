@@ -46,5 +46,14 @@ bool node_ref::remove(const node_ptr& key) {
   return m_pData->remove(key);
 }
 
+void node_ref::destroy_cross_references() {
+  if (m_crossReferencesDestroed)
+    return;
+  m_crossReferencesDestroed = true;
+
+  if (m_pData)
+    m_pData->destroy_cross_references();
+}
+
 }  // namespace detail
 }  // namespace YAML

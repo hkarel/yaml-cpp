@@ -121,5 +121,18 @@ bool node::remove(const node::ptr& key) {
   return m_pRef->remove(key);
 }
 
+void node::destroy_cross_references() {
+  if (m_crossReferencesDestroed)
+    return;
+  m_crossReferencesDestroed = true;
+
+  if (m_pRef)
+    m_pRef->destroy_cross_references();
+
+  for (node::ptr node : m_dependencies)
+    if (node)
+      node->destroy_cross_references();
+}
+
 }  // namespace detail
 }  // namespace YAML

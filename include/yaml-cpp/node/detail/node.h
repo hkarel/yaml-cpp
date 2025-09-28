@@ -106,12 +106,16 @@ class node : public clife_base {
     m_pRef->force_insert(key, value);
   }
 
+  void destroy_cross_references();
+
  private:
   node_ref::ptr m_pRef;
   using nodes = std::set<node::ptr, less>;
   nodes m_dependencies;
   size_t m_index = {0};
   static YAML_CPP_API std::atomic<size_t> m_amount;
+
+  bool m_crossReferencesDestroed = {false};
 };
 }  // namespace detail
 }  // namespace YAML

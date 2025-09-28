@@ -206,7 +206,7 @@ void node_data::insert(const node_ptr& key, const node_ptr& value) {
 // indexing
 node_ptr node_data::get(const node_ptr& key) const {
   if (m_type != NodeType::Map) {
-    return nullptr;
+    return {};
   }
 
   for (const auto& it : m_map) {
@@ -214,7 +214,7 @@ node_ptr node_data::get(const node_ptr& key) const {
       return it.second;
   }
 
-  return nullptr;
+  return {};
 }
 
 node_ptr node_data::get(const node_ptr& key) {
@@ -265,6 +265,27 @@ bool node_data::remove(const node_ptr& key) {
   return false;
 }
 
+void node_data::destroy_cross_references() {
+  if (m_crossReferencesDestroed)
+    return;
+  m_crossReferencesDestroed = true;
+
+  for (node_ptr node : m_sequence)
+    if (node)
+        node->destroy_cross_references();
+  reset_sequence();
+
+  for (auto p : m_map) {
+    if (p.first)  p.first->destroy_cross_references();
+    if (p.second) p.second->destroy_cross_references();
+  }
+  for (auto p : m_undefinedPairs) {
+    if (p.first)  p.first->destroy_cross_references();
+    if (p.second) p.second->destroy_cross_references();
+  }
+  reset_map();
+}
+
 void node_data::reset_sequence() {
   m_sequence.clear();
   m_seqSize = 0;
@@ -306,7 +327,7 @@ void node_data::convert_sequence_to_map() {
   reset_map();
   for (std::size_t i = 0; i < m_sequence.size(); i++) {
     std::stringstream stream;
-    stream.imbue(std::locale("C"));
+    stream.imbue(std::locale::classic());
     stream << i;
 
     node_ptr key {new node};

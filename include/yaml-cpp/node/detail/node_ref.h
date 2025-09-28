@@ -77,8 +77,11 @@ class node_ref : public clife_base {
     m_pData->force_insert(key, value);
   }
 
+  void destroy_cross_references();
+
  private:
   node_data::ptr m_pData;
+  bool m_crossReferencesDestroed = {false};
 };
 }
 }

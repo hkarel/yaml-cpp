@@ -182,6 +182,8 @@ TEST(NodeTest, EqualRepresentationAfterMoveAssignment) {
   EXPECT_FALSE(node2["hello"]);
   EXPECT_EQ("bar", node2["foo"].as<std::string>());
   EXPECT_EQ(ss1.str(), ss2.str());
+  node1.destroy_cross_references();
+  node2.destroy_cross_references();
 }
 
 TEST(NodeTest, MapElementRemoval) {
@@ -189,6 +191,7 @@ TEST(NodeTest, MapElementRemoval) {
   node["foo"] = "bar";
   node.remove("foo");
   EXPECT_TRUE(!node["foo"]);
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, MissingKey) {
@@ -197,6 +200,7 @@ TEST(NodeTest, MissingKey) {
   EXPECT_TRUE(!node["bar"]);
   EXPECT_EQ(NodeType::Undefined, node["bar"].Type());
   EXPECT_THROW(node["bar"].as<std::string>(), InvalidNode);
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, MapIntegerElementRemoval) {
@@ -207,6 +211,7 @@ TEST(NodeTest, MapIntegerElementRemoval) {
   EXPECT_TRUE(node.IsMap());
   node.remove(1);
   EXPECT_TRUE(node.IsMap());
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, SimpleAssignSequence) {
@@ -220,6 +225,7 @@ TEST(NodeTest, SimpleAssignSequence) {
   EXPECT_EQ("foo", node[1].as<std::string>());
   EXPECT_EQ("monkey", node[2].as<std::string>());
   EXPECT_TRUE(node.IsSequence());
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, SimpleMap) {
@@ -228,6 +234,7 @@ TEST(NodeTest, SimpleMap) {
   EXPECT_TRUE(node.IsMap());
   EXPECT_EQ("value", node["key"].as<std::string>());
   EXPECT_EQ(1, node.size());
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, MapWithUndefinedValues) {
@@ -241,6 +248,7 @@ TEST(NodeTest, MapWithUndefinedValues) {
   node["undefined"] = "monkey";
   EXPECT_EQ("monkey", node["undefined"].as<std::string>());
   EXPECT_EQ(2, node.size());
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, SeqIntoMap) {
@@ -252,6 +260,7 @@ TEST(NodeTest, SeqIntoMap) {
   EXPECT_EQ("test", node[0].as<std::string>());
   EXPECT_EQ("value", node[2].as<std::string>());
   EXPECT_EQ(2, node.size());
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, RemoveUnassignedNode) {
@@ -259,6 +268,7 @@ TEST(NodeTest, RemoveUnassignedNode) {
   node["key"];
   node.remove("key");
   EXPECT_EQ(0, node.size());
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, RemoveUnassignedNodeFromMap) {
@@ -267,6 +277,7 @@ TEST(NodeTest, RemoveUnassignedNodeFromMap) {
   node[n];
   node.remove(n);
   EXPECT_EQ(0, node.size());
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, MapForceInsert) {
@@ -286,12 +297,14 @@ TEST(NodeTest, MapForceInsert) {
   EXPECT_EQ("v1", node["k1"].as<std::string>());
   EXPECT_EQ("v1", node["k2"].as<std::string>());
   EXPECT_EQ(3, node.size());
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, UndefinedConstNodeWithFallback) {
   Node node;
   const Node& cn = node;
   EXPECT_EQ(cn["undefined"].as<int>(3), 3);
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, MapIteratorWithUndefinedValues) {
@@ -303,6 +316,7 @@ TEST(NodeTest, MapIteratorWithUndefinedValues) {
   for (const_iterator it = node.begin(); it != node.end(); ++it)
     count++;
   EXPECT_EQ(1, count);
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, ConstIteratorOnConstUndefinedNode) {
@@ -315,6 +329,7 @@ TEST(NodeTest, ConstIteratorOnConstUndefinedNode) {
     count++;
   }
   EXPECT_EQ(0, count);
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, IteratorOnConstUndefinedNode) {
@@ -330,6 +345,7 @@ TEST(NodeTest, IteratorOnConstUndefinedNode) {
     count++;
   }
   EXPECT_EQ(0, count);
+  node.destroy_cross_references();
 }
   
 TEST(NodeTest, InteratorOnSequence) {
@@ -346,6 +362,7 @@ TEST(NodeTest, InteratorOnSequence) {
     count++;
   }
   EXPECT_EQ(3, count);
+  node.destroy_cross_references();
 }
   
 TEST(NodeTest, ConstInteratorOnSequence) {
@@ -362,6 +379,7 @@ TEST(NodeTest, ConstInteratorOnSequence) {
     count++;
   }
   EXPECT_EQ(3, count);
+  node.destroy_cross_references();
 }
 
 #if __cplusplus >= 201703L
@@ -383,6 +401,7 @@ TEST(NodeTest, SimpleSubkeys) {
   EXPECT_EQ("iPhone", node["device"]["name"].as<std::string>());
   EXPECT_EQ("4.0", node["device"]["os"].as<std::string>());
   EXPECT_EQ("monkey", node["username"].as<std::string>());
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, StdArray) {
@@ -391,6 +410,7 @@ TEST(NodeTest, StdArray) {
   node["evens"] = evens;
   std::array<int, 5> actualEvens = node["evens"].as<std::array<int, 5>>();
   EXPECT_EQ(evens, actualEvens);
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, StdArrayWrongSize) {
@@ -399,6 +419,7 @@ TEST(NodeTest, StdArrayWrongSize) {
   node["evens"] = evens;
   EXPECT_THROW_REPRESENTATION_EXCEPTION(
       (node["evens"].as<std::array<int, 5>>()), ErrorMsg::BAD_CONVERSION);
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, StdValrray) {
@@ -409,6 +430,7 @@ TEST(NodeTest, StdValrray) {
   for (size_t i = 0; i < evens.size(); ++i) {
     EXPECT_EQ(evens[i], actualEvens[i]);
   }
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, StdVector) {
@@ -423,6 +445,7 @@ TEST(NodeTest, StdVector) {
   Node node;
   node["primes"] = primes;
   EXPECT_EQ(primes, node["primes"].as<std::vector<int>>());
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, StdVectorWithCustomAllocator) {
@@ -437,6 +460,7 @@ TEST(NodeTest, StdVectorWithCustomAllocator) {
   Node node;
   node["primes"] = primes;
   EXPECT_EQ(primes, node["primes"].as<CustomVector<int>>());
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, StdList) {
@@ -451,6 +475,7 @@ TEST(NodeTest, StdList) {
   Node node;
   node["primes"] = primes;
   EXPECT_EQ(primes, node["primes"].as<std::list<int>>());
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, StdListWithCustomAllocator) {
@@ -465,6 +490,7 @@ TEST(NodeTest, StdListWithCustomAllocator) {
   Node node;
   node["primes"] = primes;
   EXPECT_EQ(primes, node["primes"].as<CustomList<int>>());
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, StdMap) {
@@ -479,6 +505,7 @@ TEST(NodeTest, StdMap) {
   node["squares"] = squares;
   std::map<int, int> actualSquares = node["squares"].as<std::map<int, int>>();
   EXPECT_EQ(squares, actualSquares);
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, StdMapWithCustomAllocator) {
@@ -493,6 +520,7 @@ TEST(NodeTest, StdMapWithCustomAllocator) {
   node["squares"] = squares;
   CustomMap<int,int> actualSquares = node["squares"].as<CustomMap<int,int>>();
   EXPECT_EQ(squares, actualSquares);
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, StdUnorderedMap) {
@@ -507,6 +535,7 @@ TEST(NodeTest, StdUnorderedMap) {
   node["squares"] = squares;
   std::unordered_map<int, int> actualSquares = node["squares"].as<std::unordered_map<int, int>>();
   EXPECT_EQ(squares, actualSquares);
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, StdUnorderedMapWithCustomAllocator) {
@@ -521,6 +550,7 @@ TEST(NodeTest, StdUnorderedMapWithCustomAllocator) {
   node["squares"] = squares;
   CustomUnorderedMap<int,int> actualSquares = node["squares"].as<CustomUnorderedMap<int,int>>();
   EXPECT_EQ(squares, actualSquares);
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, StdPair) {
@@ -533,6 +563,7 @@ TEST(NodeTest, StdPair) {
   std::pair<int, std::string> actualP =
       node["pair"].as<std::pair<int, std::string>>();
   EXPECT_EQ(p, actualP);
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, SimpleAlias) {
@@ -543,6 +574,7 @@ TEST(NodeTest, SimpleAlias) {
   EXPECT_EQ("value", node["bar"].as<std::string>());
   EXPECT_EQ(node["bar"], node["foo"]);
   EXPECT_EQ(2, node.size());
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, AliasAsKey) {
@@ -554,6 +586,7 @@ TEST(NodeTest, AliasAsKey) {
   EXPECT_EQ("foo", node[value].as<std::string>());
   EXPECT_EQ("foo", node["value"].as<std::string>());
   EXPECT_EQ(2, node.size());
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, SelfReferenceSequence) {
@@ -564,6 +597,7 @@ TEST(NodeTest, SelfReferenceSequence) {
   EXPECT_EQ(node, node[0]);
   EXPECT_EQ(node, node[0][0]);
   EXPECT_EQ(node[0], node[0][0]);
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, ValueSelfReferenceMap) {
@@ -574,6 +608,7 @@ TEST(NodeTest, ValueSelfReferenceMap) {
   EXPECT_EQ(node, node["key"]);
   EXPECT_EQ(node, node["key"]["key"]);
   EXPECT_EQ(node["key"], node["key"]["key"]);
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, KeySelfReferenceMap) {
@@ -582,6 +617,7 @@ TEST(NodeTest, KeySelfReferenceMap) {
   EXPECT_TRUE(node.IsMap());
   EXPECT_EQ(1, node.size());
   EXPECT_EQ("value", node[node].as<std::string>());
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, SelfReferenceMap) {
@@ -592,6 +628,7 @@ TEST(NodeTest, SelfReferenceMap) {
   EXPECT_EQ(node, node[node]);
   EXPECT_EQ(node, node[node][node]);
   EXPECT_EQ(node[node], node[node][node]);
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, TempMapVariable) {
@@ -601,6 +638,7 @@ TEST(NodeTest, TempMapVariable) {
   EXPECT_TRUE(node.IsMap());
   EXPECT_EQ(1, node.size());
   EXPECT_EQ("value", node["key"].as<std::string>());
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, TempMapVariableAlias) {
@@ -613,6 +651,7 @@ TEST(NodeTest, TempMapVariableAlias) {
   EXPECT_EQ("value", node["key"].as<std::string>());
   EXPECT_EQ("value", node["other"].as<std::string>());
   EXPECT_EQ(node["key"], node["other"]);
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, Bool) {
@@ -620,6 +659,7 @@ TEST(NodeTest, Bool) {
   node[true] = false;
   EXPECT_TRUE(node.IsMap());
   EXPECT_EQ(false, node[true].as<bool>());
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, AutoBoolConversion) {
@@ -631,12 +671,14 @@ TEST(NodeTest, AutoBoolConversion) {
   EXPECT_TRUE(static_cast<bool>(node["foo"]));
   EXPECT_TRUE(!node["monkey"]);
   EXPECT_TRUE(!!node["foo"]);
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, FloatingPrecisionFloat) {
   const float x = 0.123456789;
   Node node = Node(x);
   EXPECT_EQ(x, node.as<float>());
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, FloatingPrecisionPositiveInfinityFloat) {
@@ -646,6 +688,7 @@ TEST(NodeTest, FloatingPrecisionPositiveInfinityFloat) {
   const float x = std::numeric_limits<float>::infinity();
   Node node = Node(x);
   EXPECT_EQ(x, node.as<float>());
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, FloatingPrecisionNegativeInfinityFloat) {
@@ -655,6 +698,7 @@ TEST(NodeTest, FloatingPrecisionNegativeInfinityFloat) {
   const float x = -std::numeric_limits<float>::infinity();
   Node node = Node(x);
   EXPECT_EQ(x, node.as<float>());
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, FloatingPrecisionNanFloat) {
@@ -664,12 +708,14 @@ TEST(NodeTest, FloatingPrecisionNanFloat) {
   const float x = std::numeric_limits<float>::quiet_NaN();
   Node node = Node(x);
   EXPECT_TRUE(std::isnan(node.as<float>()));
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, FloatingPrecisionDouble) {
   const double x = 0.123456789;
   Node node = Node(x);
   EXPECT_EQ(x, node.as<double>());
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, FloatingPrecisionPositiveInfinityDouble) {
@@ -679,6 +725,7 @@ TEST(NodeTest, FloatingPrecisionPositiveInfinityDouble) {
   const double x = std::numeric_limits<double>::infinity();
   Node node = Node(x);
   EXPECT_EQ(x, node.as<float>());
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, FloatingPrecisionNegativeInfinityDouble) {
@@ -688,6 +735,7 @@ TEST(NodeTest, FloatingPrecisionNegativeInfinityDouble) {
   const double x = -std::numeric_limits<double>::infinity();
   Node node = Node(x);
   EXPECT_EQ(x, node.as<double>());
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, FloatingPrecisionNanDouble) {
@@ -697,17 +745,20 @@ TEST(NodeTest, FloatingPrecisionNanDouble) {
   const double x = std::numeric_limits<double>::quiet_NaN();
   Node node = Node(x);
   EXPECT_TRUE(std::isnan(node.as<double>()));
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, SpaceChar) {
   Node node = Node(' ');
   EXPECT_EQ(' ', node.as<char>());
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, CloneNull) {
   Node node;
   Node clone = Clone(node);
   EXPECT_EQ(NodeType::Null, clone.Type());
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, KeyNodeExitsScope) {
@@ -719,11 +770,13 @@ TEST(NodeTest, KeyNodeExitsScope) {
   for (Node::const_iterator it = node.begin(); it != node.end(); ++it) {
     (void)it;
   }
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, DefaultNodeStyle) {
   Node node;
   EXPECT_EQ(EmitterStyle::Default, node.Style());
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, AccessNonexistentKeyOnConstNode) {
@@ -731,6 +784,7 @@ TEST(NodeTest, AccessNonexistentKeyOnConstNode) {
   node["3"] = "4";
   const YAML::Node& other = node;
   ASSERT_FALSE(other["5"]);
+  node.destroy_cross_references();
 }
 
 class NodeEmitterTest : public ::testing::Test {
@@ -766,6 +820,7 @@ TEST_F(NodeEmitterTest, SimpleFlowSeqNode) {
   node.push_back(1.5474251e+26f);
 
   ExpectOutput("[1.5, 2.25, 3.125, 34.34, 56.56, 12.12, 78.78, 0.0003, 4000, 1.5474251e+26]", node);
+  node.destroy_cross_references();
 }
 
 TEST_F(NodeEmitterTest, NestFlowSeqNode) {
@@ -784,6 +839,9 @@ TEST_F(NodeEmitterTest, NestFlowSeqNode) {
   node.push_back(cell1);
 
   ExpectOutput("[[1.5, 2.25, 3.125], [4.5, 5.25, 6.125]]", node);
+  node.destroy_cross_references();
+  cell0.destroy_cross_references();
+  cell1.destroy_cross_references();
 }
 
 TEST_F(NodeEmitterTest, MixBlockFlowSeqNode) {
@@ -803,6 +861,9 @@ TEST_F(NodeEmitterTest, MixBlockFlowSeqNode) {
   node.push_back(cell1);
 
   ExpectOutput("- [1.5, 2.25, 3.125]\n-\n  - 4.5\n  - 5.25\n  - 6.125", node);
+  node.destroy_cross_references();
+  cell0.destroy_cross_references();
+  cell1.destroy_cross_references();
 }
 
 TEST_F(NodeEmitterTest, NestBlockFlowMapListNode) {
@@ -819,6 +880,9 @@ TEST_F(NodeEmitterTest, NestBlockFlowMapListNode) {
   blockNode.push_back(mapNode);
 
   ExpectOutput("- 1.0625\n- {position: [1.5, 2.25, 3.125]}", blockNode);
+  node.destroy_cross_references();
+  mapNode.destroy_cross_references();
+  blockNode.destroy_cross_references();
 }
 
 TEST_F(NodeEmitterTest, NestBlockMixMapListNode) {
@@ -837,6 +901,9 @@ TEST_F(NodeEmitterTest, NestBlockMixMapListNode) {
   ExpectAnyOutput(blockNode,
                   "scalar: 1.0625\nobject: {position: [1.5, 2.25, 3.125]}",
                   "object: {position: [1.5, 2.25, 3.125]}\nscalar: 1.5");
+  node.destroy_cross_references();
+  mapNode.destroy_cross_references();
+  blockNode.destroy_cross_references();
 }
 
 TEST_F(NodeEmitterTest, NestBlockMapListNode) {
@@ -850,6 +917,8 @@ TEST_F(NodeEmitterTest, NestBlockMapListNode) {
   mapNode["position"] = node;
 
   ExpectOutput("position:\n  - 1.5\n  - 2.25\n  - 3.125", mapNode);
+  node.destroy_cross_references();
+  mapNode.destroy_cross_references();
 }
 
 TEST_F(NodeEmitterTest, NestFlowMapListNode) {
@@ -863,6 +932,8 @@ TEST_F(NodeEmitterTest, NestFlowMapListNode) {
   mapNode["position"] = node;
 
   ExpectOutput("{position: [1.5, 2.25, 3.125]}", mapNode);
+  node.destroy_cross_references();
+  mapNode.destroy_cross_references();
 }
 
 TEST_F(NodeEmitterTest, RobustAgainstLocale) {
@@ -874,6 +945,7 @@ TEST_F(NodeEmitterTest, RobustAgainstLocale) {
   node.push_back(123456789);
 
   ExpectOutput("- 1.5\n- 2.25\n- 3.125\n- 123456789", node);
+  node.destroy_cross_references();
 }
 
 }
