@@ -306,7 +306,7 @@ void node_data::convert_sequence_to_map() {
   reset_map();
   for (std::size_t i = 0; i < m_sequence.size(); i++) {
     std::stringstream stream;
-    stream.imbue(std::locale("C"));
+    stream.imbue(std::locale::classic());
     stream << i;
 
     node_ptr key {new node};
