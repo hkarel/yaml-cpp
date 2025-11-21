@@ -1,15 +1,12 @@
 import qbs
+import qbs.FileInfo
 
 Product {
     name: "Yaml"
     targetName: "yaml"
 
-    type: "staticlibrary"
+    type: (project.yamlDynamicLib === true) ? ["dynamiclibrary"] : ["staticlibrary"]
 
-    Properties {
-        type: "dynamiclibrary"
-        condition: project.yamlDynamicLib === true
-    }
     Properties {
         destinationDirectory: project.destinationLibDirectory
         condition: project.destinationLibDirectory !== undefined
@@ -31,6 +28,7 @@ Product {
         "-Wextra",
         "-Wno-unused-parameter",
     ]
+
     cpp.includePaths: ["include"]
     cpp.cxxLanguageVersion: "c++17"
 
@@ -44,9 +42,12 @@ Product {
         "src/*.cpp",
         "src/*.h",
     ]
+
     Export {
         Depends { name: "cpp" }
-        cpp.systemIncludePaths: ["include"]
+        cpp.includePaths: [
+            FileInfo.joinPaths(exportingProduct.sourceDirectory, "include")
+        ]
         cpp.defines: ["YAML_CPP_STATIC_DEFINE"]
     }
 }
