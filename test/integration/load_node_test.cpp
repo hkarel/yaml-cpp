@@ -319,7 +319,7 @@ TEST(NodeTest, IncorrectFlow) {
     {"Incorrect yaml: \"{:]\"", "{:]", ErrorMsg::FLOW_END},
     {"Incorrect yaml: \"[:}\"", "[:}", ErrorMsg::FLOW_END},
   };
-  for (const ParserExceptionTestCase test : tests) {
+  for (const ParserExceptionTestCase& test : tests) {
     try {
       Load(test.input);
       FAIL() << "Expected exception " << test.expected_exception << " for "

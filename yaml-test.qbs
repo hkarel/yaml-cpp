@@ -11,7 +11,7 @@ Project {
 
         type: ["application", "autotest"]
         consoleApplication: true
-        destinationDirectory: "./bin"
+        destinationDirectory: "bin"
 
         Depends { name: "cpp" }
         Depends { name: "GTest" }

@@ -1,4 +1,5 @@
 import qbs
+import qbs.FileInfo
 
 Product {
     name: "GTest"
@@ -16,13 +17,12 @@ Product {
         "-Wno-unused-parameter",
     ]
 
-    property var includePaths: [
+    cpp.includePaths: [
         "googletest-1.13.0/googlemock/include",
         "googletest-1.13.0/googlemock",
         "googletest-1.13.0/googletest/include",
         "googletest-1.13.0/googletest",
     ]
-    cpp.includePaths: includePaths;
     cpp.cxxLanguageVersion: "c++17"
 
     files: [
@@ -34,6 +34,9 @@ Product {
     ]
     Export {
         Depends { name: "cpp" }
-        cpp.includePaths: exportingProduct.includePaths
+        cpp.includePaths: [
+            FileInfo.joinPaths(exportingProduct.sourceDirectory, "googletest-1.13.0/googlemock/include"),
+            FileInfo.joinPaths(exportingProduct.sourceDirectory, "googletest-1.13.0/googletest/include"),
+        ]
     }
 }
