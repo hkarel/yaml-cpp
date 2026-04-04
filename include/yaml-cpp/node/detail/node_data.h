@@ -93,7 +93,7 @@ class YAML_CPP_API node_data : public clife_base {
   void reset_sequence();
   void reset_map();
 
-  void insert_map_pair(const node_ptr& key, const node_ptr& value);
+  void insert_map_pair(const node_ptr& key, const node_ptr& value, bool force = false);
   void convert_to_map();
   void convert_sequence_to_map();
 

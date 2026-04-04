@@ -211,7 +211,7 @@ inline void node_data::force_insert(const Key& key, const Value& value) {
 
   node_ptr k = convert_to_node(key);
   node_ptr v = convert_to_node(value);
-  insert_map_pair(k, v);
+  insert_map_pair(k, v, true);
 }
 
 template <typename T>
