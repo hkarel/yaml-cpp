@@ -787,6 +787,12 @@ TEST(NodeTest, AccessNonexistentKeyOnConstNode) {
   node.destroy_cross_references();
 }
 
+TEST(NodeTest, CreateMapWithFloatingPoint0Key) {
+  Node node;
+  node[0.1] = 1.0;
+  EXPECT_TRUE(node.IsMap());
+}
+
 class NodeEmitterTest : public ::testing::Test {
  protected:
   void ExpectOutput(const std::string& output, const Node& node) {

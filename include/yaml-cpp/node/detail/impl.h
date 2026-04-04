@@ -40,7 +40,8 @@ struct get_idx<Key,
 };
 
 template <typename Key>
-struct get_idx<Key, typename std::enable_if<std::is_signed<Key>::value>::type> {
+struct get_idx<Key, typename std::enable_if<std::is_signed<Key>::value &&
+                                            std::is_integral<Key>::value>::type> {
   static node_ptr get(const std::vector<node_ptr>& sequence, const Key& key) {
     return key >= 0 ? get_idx<std::size_t>::get(
                           sequence, static_cast<std::size_t>(key))
