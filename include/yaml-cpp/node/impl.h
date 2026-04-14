@@ -21,7 +21,7 @@ namespace YAML {
 template <typename T>
 inline Node::Node(const T& rhs)
     : m_isValid(true),
-      m_pNode(new detail::node) {
+      m_pNode(detail::node_ptr::create()) {
   Assign(rhs);
 }
 

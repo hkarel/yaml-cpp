@@ -22,7 +22,7 @@ Node::~Node() {
 
 Node::Node(NodeType::value type)
     : m_isValid(true),
-      m_pNode(new detail::node) {
+      m_pNode(detail::node_ptr::create()) {
   m_pNode->set_type(type);
 }
 
@@ -50,7 +50,7 @@ void Node::EnsureNodeExists() const {
   if (!m_isValid)
     throw InvalidNode(m_invalidKey);
   if (!m_pNode) {
-    m_pNode = detail::node::ptr(new detail::node);
+    m_pNode = detail::node_ptr::create();
     m_pNode->set_null();
   }
 }

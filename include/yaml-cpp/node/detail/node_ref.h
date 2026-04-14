@@ -18,7 +18,7 @@ class node_ref : public clife_base {
  public:
   typedef clife_ptr<node_ref> ptr;
 
-  node_ref() : m_pData(new node_data) {}
+  node_ref() : m_pData(node_data::ptr::create()) {}
   node_ref(const node_ref&) = delete;
   node_ref& operator=(const node_ref&) = delete;
 

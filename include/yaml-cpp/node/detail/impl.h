@@ -34,7 +34,7 @@ struct get_idx<Key,
     if (key > sequence.size() || (key > 0 && !sequence[key - 1]->is_defined()))
       return node_ptr();
     if (key == sequence.size())
-      sequence.push_back(node_ptr(new node));
+      sequence.push_back(node_ptr::create());
     return sequence[key];
   }
 };
@@ -161,7 +161,7 @@ inline node_ptr node_data::get(const Key& key) {
   }
 
   node_ptr k = convert_to_node(key);
-  node_ptr v {new node};
+  node_ptr v = node_ptr::create();
   insert_map_pair(k, v);
   return v;
 }

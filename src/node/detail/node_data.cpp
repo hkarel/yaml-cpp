@@ -235,7 +235,7 @@ node_ptr node_data::get(const node_ptr& key) {
       return it.second;
   }
 
-  node_ptr value {new node};
+  node_ptr value {node_ptr::create()};
   insert_map_pair(key, value);
   return value;
 }
@@ -335,7 +335,7 @@ void node_data::convert_sequence_to_map() {
     stream.imbue(std::locale::classic());
     stream << i;
 
-    node_ptr key {new node};
+    node_ptr key {node_ptr::create()};
     key->set_scalar(stream.str());
     insert_map_pair(key, m_sequence[i]);
   }

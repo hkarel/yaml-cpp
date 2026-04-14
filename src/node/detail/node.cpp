@@ -8,7 +8,7 @@
 namespace YAML {
 namespace detail {
 
-node::node() : m_pRef(new node_ref)//, m_dependencies{}, m_index{}
+node::node() : m_pRef(node_ref::ptr::create())//, m_dependencies{}, m_index{}
 {}
 
 node::~node()

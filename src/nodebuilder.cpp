@@ -75,7 +75,7 @@ void NodeBuilder::OnMapEnd() {
 }
 
 detail::node_ptr NodeBuilder::Push(const Mark& mark, anchor_t anchor) {
-  detail::node::ptr node {new detail::node};
+  detail::node::ptr node {detail::node::ptr::create()};
   node->set_mark(mark);
   RegisterAnchor(anchor, node);
   Push(node);
