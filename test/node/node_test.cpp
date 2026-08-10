@@ -366,6 +366,8 @@ TEST(NodeTest, MapIteratorWithUndefinedValues) {
     count++;
   EXPECT_EQ(1, count);
   node.destroy_cross_references();
+}
+
 TEST(NodeTest, MapIteratorWithUndefinedValuesBackward) {
   Node node;
   node["key"] = "value";
@@ -375,6 +377,7 @@ TEST(NodeTest, MapIteratorWithUndefinedValuesBackward) {
   for (const_iterator it = node.end(); it != node.begin(); --it)
     count++;
   EXPECT_EQ(1, count);
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, MapReverseIteratorWithUndefinedValues) {
@@ -386,8 +389,7 @@ TEST(NodeTest, MapReverseIteratorWithUndefinedValues) {
   for (const_reverse_iterator it = node.rbegin(); it != node.rend(); ++it)
     count++;
   EXPECT_EQ(1, count);
-}
-
+  node.destroy_cross_references();
 }
 
 TEST(NodeTest, ConstIteratorOnConstUndefinedNode) {
