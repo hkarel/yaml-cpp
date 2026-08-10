@@ -168,6 +168,25 @@ void Scanner::ScanNextToken() {
   // special scalars
   if (InBlockContext() && (INPUT.peek() == Keys::LiteralScalar ||
                            INPUT.peek() == Keys::FoldedScalar)) {
+    // if we begin parsing a literal scalar with an unverified potential 
+    // simple key pushed, that may be a tag to the literal scalar, and
+    // should be removed to avoid wrong indentation limit
+    // eg:
+    // - !!str |
+    //  literal
+    //  scalar
+    if (!m_simpleKeys.empty() &&
+      m_simpleKeys.top().pKey->status == Token::UNVERIFIED) {
+      // if the top of the indents does not match the unverified simple key,
+      // just invalidate the simple key and do not pop indent to avoid crash.
+      // eg: an unverified key crossing lines, like issue #1475.
+      if (m_simpleKeys.top().pIndent && !m_indents.empty() &&
+          m_indents.top() == m_simpleKeys.top().pIndent) {
+        PopIndent();
+      } else {
+        InvalidateSimpleKey();
+      }
+    }
     return ScanBlockScalar();
   }
 
@@ -382,6 +401,9 @@ void Scanner::PopAllIndents() {
 }
 
 void Scanner::PopIndent() {
+  if (m_indents.empty()) {
+    ThrowParserException(ErrorMsg::INDENT_STACK_UNDERFLOW);
+  }
   const IndentMarker& indent = *m_indents.top();
   m_indents.pop();
 
