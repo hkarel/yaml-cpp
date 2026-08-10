@@ -181,6 +181,14 @@ iterator Node::begin() {
   return m_pNode ? iterator(m_pNode->begin()) : iterator();
 }
 
+const_reverse_iterator Node::rbegin() const {
+  return const_reverse_iterator(end());
+}
+
+reverse_iterator Node::rbegin() {
+  return reverse_iterator(end());
+}
+
 const_iterator Node::end() const {
   if (!m_isValid)
     return const_iterator();
@@ -191,6 +199,14 @@ iterator Node::end() {
   if (!m_isValid)
     return iterator();
   return m_pNode ? iterator(m_pNode->end()) : iterator();
+}
+
+const_reverse_iterator Node::rend() const {
+  return const_reverse_iterator(begin());
+}
+
+reverse_iterator Node::rend() {
+  return reverse_iterator(begin());
 }
 
 void Node::push_back(const Node& rhs) {

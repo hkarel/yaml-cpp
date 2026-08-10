@@ -377,6 +377,17 @@ TEST(NodeTest, MapIteratorWithUndefinedValuesBackward) {
   EXPECT_EQ(1, count);
 }
 
+TEST(NodeTest, MapReverseIteratorWithUndefinedValues) {
+  Node node;
+  node["key"] = "value";
+  node["undefined"];
+
+  std::size_t count = 0;
+  for (const_reverse_iterator it = node.rbegin(); it != node.rend(); ++it)
+    count++;
+  EXPECT_EQ(1, count);
+}
+
 }
 
 TEST(NodeTest, ConstIteratorOnConstUndefinedNode) {
@@ -390,6 +401,18 @@ TEST(NodeTest, ConstIteratorOnConstUndefinedNode) {
   }
   EXPECT_EQ(0, count);
   node.destroy_cross_references();
+}
+
+TEST(NodeTest, ConstReverseIteratorOnConstUndefinedNode) {
+  Node node;
+  const Node& cn = node;
+  const Node& undefinedCn = cn["undefined"];
+
+  std::size_t count = 0;
+  for (const_reverse_iterator it = undefinedCn.rbegin(); it != undefinedCn.rend(); ++it) {
+    count++;
+  }
+  EXPECT_EQ(0, count);
 }
 
 TEST(NodeTest, IteratorOnConstUndefinedNode) {
@@ -406,6 +429,21 @@ TEST(NodeTest, IteratorOnConstUndefinedNode) {
   }
   EXPECT_EQ(0, count);
   node.destroy_cross_references();
+}
+
+TEST(NodeTest, ReverseIteratorOnConstUndefinedNode) {
+  Node node;
+  const Node& cn = node;
+  const Node& undefinedCn = cn["undefined"];
+
+  Node& nonConstUndefinedNode = const_cast<Node&>(undefinedCn);
+
+  std::size_t count = 0;
+  for (reverse_iterator it = nonConstUndefinedNode.rbegin();
+       it != nonConstUndefinedNode.rend(); ++it) {
+    count++;
+  }
+  EXPECT_EQ(0, count);
 }
   
 TEST(NodeTest, InteratorOnSequence) {
@@ -441,6 +479,22 @@ TEST(NodeTest, InteratorOnSequenceBackward) {
   node.destroy_cross_references();
 }
   
+TEST(NodeTest, ReverseInteratorOnSequence) {
+  Node node;
+  node[0] = "a";
+  node[1] = "b";
+  node[2] = "c";
+  EXPECT_TRUE(node.IsSequence());
+  
+  std::size_t count = 0;
+  for (reverse_iterator it = node.rbegin(); it != node.rend(); ++it)
+  {
+    EXPECT_FALSE(it->IsNull());
+    count++;
+  }
+  EXPECT_EQ(3, count);
+}
+  
 TEST(NodeTest, ConstInteratorOnSequence) {
   Node node;
   node[0] = "a";
@@ -450,6 +504,22 @@ TEST(NodeTest, ConstInteratorOnSequence) {
   
   std::size_t count = 0;
   for (const_iterator it = node.begin(); it != node.end(); ++it)
+  {
+    EXPECT_FALSE(it->IsNull());
+    count++;
+  }
+  EXPECT_EQ(3, count);
+}
+  
+TEST(NodeTest, ConstReverseInteratorOnSequence) {
+  Node node;
+  node[0] = "a";
+  node[1] = "b";
+  node[2] = "c";
+  EXPECT_TRUE(node.IsSequence());
+  
+  std::size_t count = 0;
+  for (const_reverse_iterator it = node.rbegin(); it != node.rend(); ++it)
   {
     EXPECT_FALSE(it->IsNull());
     count++;
