@@ -9,6 +9,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
+#include <cstdint>
 #include <sstream>
 
 namespace {
@@ -82,6 +83,18 @@ TEST(NodeTest, OctalScalar) {
   EXPECT_EQ(123, Node("123").as<int>());
   // "0o" followed by non-octal digits must not be reinterpreted as hex
   EXPECT_EQ(-1, Node("0oxff").as<int>(-1));
+}
+
+TEST(NodeTest, EightBitIntegerScalar) {
+  // unsigned char / signed char decode as integers, so they must encode as
+  // integers too; plain char keeps its single-character behaviour (#1027)
+  EXPECT_EQ("16", Node(std::uint8_t{16}).Scalar());
+  EXPECT_EQ("65", Node(std::uint8_t{65}).Scalar());
+  EXPECT_EQ("-7", Node(std::int8_t{-7}).Scalar());
+  EXPECT_EQ(std::uint8_t{200}, Node(std::uint8_t{200}).as<std::uint8_t>());
+  EXPECT_EQ(std::int8_t{-7}, Node(std::int8_t{-7}).as<std::int8_t>());
+  EXPECT_EQ("a", Node('a').Scalar());
+  EXPECT_EQ('a', Node('a').as<char>());
 }
 
 TEST(NodeTest, SimpleAppendSequence) {
@@ -447,14 +460,14 @@ TEST(NodeTest, ReverseIteratorOnConstUndefinedNode) {
   }
   EXPECT_EQ(0, count);
 }
-  
+
 TEST(NodeTest, InteratorOnSequence) {
   Node node;
   node[0] = "a";
   node[1] = "b";
   node[2] = "c";
   EXPECT_TRUE(node.IsSequence());
-  
+
   std::size_t count = 0;
   for (iterator it = node.begin(); it != node.end(); ++it)
   {
@@ -463,14 +476,14 @@ TEST(NodeTest, InteratorOnSequence) {
   }
   EXPECT_EQ(3, count);
 }
-  
+
 TEST(NodeTest, InteratorOnSequenceBackward) {
   Node node;
   node[0] = "a";
   node[1] = "b";
   node[2] = "c";
   EXPECT_TRUE(node.IsSequence());
-  
+
   std::size_t count = 0;
   for (iterator it = node.end(); it != node.begin(); --it)
   {
@@ -480,14 +493,14 @@ TEST(NodeTest, InteratorOnSequenceBackward) {
   EXPECT_EQ(3, count);
   node.destroy_cross_references();
 }
-  
+
 TEST(NodeTest, ReverseInteratorOnSequence) {
   Node node;
   node[0] = "a";
   node[1] = "b";
   node[2] = "c";
   EXPECT_TRUE(node.IsSequence());
-  
+
   std::size_t count = 0;
   for (reverse_iterator it = node.rbegin(); it != node.rend(); ++it)
   {
@@ -496,14 +509,14 @@ TEST(NodeTest, ReverseInteratorOnSequence) {
   }
   EXPECT_EQ(3, count);
 }
-  
+
 TEST(NodeTest, ConstInteratorOnSequence) {
   Node node;
   node[0] = "a";
   node[1] = "b";
   node[2] = "c";
   EXPECT_TRUE(node.IsSequence());
-  
+
   std::size_t count = 0;
   for (const_iterator it = node.begin(); it != node.end(); ++it)
   {
@@ -512,14 +525,14 @@ TEST(NodeTest, ConstInteratorOnSequence) {
   }
   EXPECT_EQ(3, count);
 }
-  
+
 TEST(NodeTest, ConstReverseInteratorOnSequence) {
   Node node;
   node[0] = "a";
   node[1] = "b";
   node[2] = "c";
   EXPECT_TRUE(node.IsSequence());
-  
+
   std::size_t count = 0;
   for (const_reverse_iterator it = node.rbegin(); it != node.rend(); ++it)
   {

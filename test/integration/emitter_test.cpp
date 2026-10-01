@@ -127,6 +127,17 @@ TEST_F(EmitterTest, UnsignedEightBitInteger) {
   ExpectEmit("- 16");
 }
 
+TEST_F(EmitterTest, SignedEightBitInteger) {
+  // int8_t has no operator<< of its own and reaches the int overload by
+  // integral promotion; pin that so adding one cannot silently make it a char
+  out << BeginSeq;
+  out << std::int8_t{16};
+  out << std::int8_t{-7};
+  out << EndSeq;
+
+  ExpectEmit("- 16\n- -7");
+}
+
 TEST_F(EmitterTest, NumberPrecision) {
   out.SetFloatPrecision(3);
   out.SetDoublePrecision(2);
@@ -452,6 +463,22 @@ TEST_F(EmitterTest, LiteralWithAndWithoutTrailingEmptyLines) {
       "- |\n  A\n  B\n"
       "- |+\n  A\n  B\n\n\n"
       "- something");
+}
+
+TEST_F(EmitterTest, SingleQuotedWithCarriageReturn) {
+  out << BeginMap;
+  out << Key << "key" << Value << SingleQuoted << "a\rb";
+  out << EndMap;
+
+  ExpectEmit("key: \"a\\rb\"");
+}
+
+TEST_F(EmitterTest, LiteralWithCarriageReturn) {
+  out << BeginMap;
+  out << Key << "key" << Value << Literal << "a\rb";
+  out << EndMap;
+
+  ExpectEmit("key: \"a\\rb\"");
 }
 
 
@@ -810,6 +837,26 @@ TEST_F(EmitterTest, MultiLineComment) {
       "possibly\n          # fit on one line\n- item 2");
 }
 
+TEST_F(EmitterTest, MultiLineCommentWithCarriageReturn) {
+  out << BeginSeq;
+  out << "item 1" << Comment("really long\rcomment on two lines");
+  out << "item 2";
+  out << EndSeq;
+
+  ExpectEmit(
+      "- item 1  # really long\n          # comment on two lines\n- item 2");
+}
+
+TEST_F(EmitterTest, MultiLineCommentWithCarriageReturnLineFeed) {
+  out << BeginSeq;
+  out << "item 1" << Comment("really long\r\ncomment on two lines");
+  out << "item 2";
+  out << EndSeq;
+
+  ExpectEmit(
+      "- item 1  # really long\n          # comment on two lines\n- item 2");
+}
+
 TEST_F(EmitterTest, ComplexComments) {
   out << BeginMap;
   out << LongKey << Key << "long key" << Comment("long key");
@@ -1010,7 +1057,7 @@ TEST_F(EmitterTest, Unicode) {
 
 TEST_F(EmitterTest, DoubleQuotedUnicode) {
   out << DoubleQuoted << "\x24 \xC2\xA2 \xE2\x82\xAC \xF0\xA4\xAD\xA2";
-  ExpectEmit("\"\x24 \xC2\xA2 \xE2\x82\xAC \xF0\xA4\xAD\xA2\""); 
+  ExpectEmit("\"\x24 \xC2\xA2 \xE2\x82\xAC \xF0\xA4\xAD\xA2\"");
 }
 
 TEST_F(EmitterTest, EscapedJsonString) {
@@ -1029,7 +1076,7 @@ TEST_F(EmitterTest, EscapedJsonString) {
 }
 
 TEST_F(EmitterTest, EscapedCharacters) {
-  out << BeginSeq 
+  out << BeginSeq
     << '\x00'
     << '\x0C'
     << '\x0D'
@@ -1606,7 +1653,7 @@ TEST_F(EmitterTest, NaN) {
       "bar: .nan");
 }
 
-TEST_F(EmitterTest, ComplexFlowSeqEmbeddingAMapWithNewLine) { 
+TEST_F(EmitterTest, ComplexFlowSeqEmbeddingAMapWithNewLine) {
   out << YAML::BeginMap;
 
   out << YAML::Key << "NodeA" << YAML::Value << YAML::BeginMap;
@@ -2058,6 +2105,33 @@ TEST_F(EmitterTest, EmitSetLocalTagInNameHandle) {
   out << root;
   ExpectEmit("num: !a!foo 42");
 }
+
+TEST_F(EmitterTest, EmitMultiDocsWithTags) {
+   out << YAML::BeginDoc
+       << YAML::LocalTag("The_Tag")
+       << YAML::BeginSeq
+       << "Some Value"
+       << YAML::EndSeq
+       << YAML::EndDoc;
+
+   out << YAML::BeginDoc
+       << YAML::LocalTag("The_Tag")
+       << YAML::BeginSeq
+       << "Some Value"
+       << YAML::EndSeq
+       << YAML::EndDoc;
+
+  ExpectEmit(
+        "---\n"
+        "!The_Tag\n"
+        "- Some Value\n"
+        "...\n"
+        "---\n"
+        "!The_Tag\n"
+        "- Some Value\n"
+        "...\n");
+}
+
 
 }  // namespace
 }  // namespace YAML

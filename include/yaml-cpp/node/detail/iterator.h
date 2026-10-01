@@ -72,7 +72,7 @@ class iterator_base {
     ++(*this);
     return iterator_pre;
   }
-  
+
   iterator_base<V>& operator--() {
     --m_iterator;
     return *this;
