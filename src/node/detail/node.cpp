@@ -1,8 +1,3 @@
-//#include <algorithm>
-//#include <cassert>
-//#include <iterator>
-//#include <sstream>
-
 #include "yaml-cpp/node/detail/node.h"  // IWYU pragma: keep
 
 namespace YAML {
