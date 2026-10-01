@@ -7,6 +7,9 @@
 #pragma once
 #endif
 
+// IWYU pragma: private, include "yaml-cpp/yaml.h"
+// IWYU pragma: friend "yaml-cpp/.*"
+
 #include <cstddef>
 
 namespace YAML {

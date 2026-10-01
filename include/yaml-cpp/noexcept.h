@@ -7,6 +7,9 @@
 #pragma once
 #endif
 
+// IWYU pragma: private, include "yaml-cpp/yaml.h"
+// IWYU pragma: friend "yaml-cpp/.*"
+
 // This is here for compatibility with older versions of Visual Studio
 // which don't support noexcept.
 #if defined(_MSC_VER) && _MSC_VER < 1900

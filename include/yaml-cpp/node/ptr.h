@@ -7,6 +7,9 @@
 #pragma once
 #endif
 
+// IWYU pragma: private, include "yaml-cpp/yaml.h"
+// IWYU pragma: friend "yaml-cpp/.*"
+
 #include "yaml-cpp/node/detail/clife_base.h"
 #include "yaml-cpp/node/detail/clife_ptr.h"
 
